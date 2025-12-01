@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Form, Input, Button } from 'antd';
+import { Card, Form, Input, Button, message } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [form] = Form.useForm();
 
   // 图形验证码（本地生成）
@@ -69,9 +71,22 @@ const Login: React.FC = () => {
     refreshCaptcha();
   }, []);
 
-  const onFinish = () => {
-    // 这里不做登录态校验，提交后直接进入后台首页
-    navigate('/home');
+  const onFinish = async (values: any) => {
+    try {
+      // 模拟登录请求
+      // 在实际应用中，这里应该调用后端API进行身份验证
+      console.log('登录信息:', values);
+      
+      // 模拟登录成功
+      // 实际应用中应该从服务器获取真实的认证令牌
+      const fakeToken = 'fake-jwt-token-' + Date.now();
+      login(fakeToken);
+      
+      message.success('登录成功');
+      navigate('/home');
+    } catch (error) {
+      message.error('登录失败，请检查用户名和密码');
+    }
   };
 
   return (
