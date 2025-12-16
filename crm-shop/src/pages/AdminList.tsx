@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Modal, Radio, message } from 'antd';
+import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Modal, Radio, message, Tag } from 'antd';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
@@ -11,38 +11,54 @@ const AdminList: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [list, setList] = useState<any[]>([]);
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [total, setTotal] = useState<number>(0);
 
   const columns = [
     { title: '管理员ID', dataIndex: 'admin_id' },
     { title: '管理员昵称', dataIndex: 'user_name' },
     { title: '手机号码', dataIndex: 'user_phone' },
-    { title: '角色ID', dataIndex: 'department_id' }
+    { title: '角色ID', dataIndex: 'department_id' },
+    { title: '状态', dataIndex: 'status', render: (val: string) => (
+      <Tag color={val === 'on' ? 'green' : 'red'}>{val === 'on' ? '启用' : '禁用'}</Tag>
+    ) },
+    { title: '创建时间', dataIndex: 'created_at' }
   ];
 
-  const fetchAdminList = async () => {
+  const fetchAdminList = async (p: number = 1, ps: number = 10) => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_BASE_URL}/api/admin/list`);
+      const res = await axios.get(`${API_BASE_URL}/api/admin/list`, {
+        params: { limit: ps, offset: p }
+      });
       const data = res.data;
       if (data && typeof data === 'object') {
         if (data.code === 0 && data.data) {
-          const arr = Array.isArray(data.data.list) ? data.data.list : Array.isArray(data.data) ? data.data : [];
+          const arr = Array.isArray(data.data.list) ? data.data.list : [];
+          const cnt = typeof data.data.count === 'number' ? data.data.count : 0;
           setList(arr);
+          setTotal(cnt);
+          setPage(p);
+          setPageSize(ps);
         } else {
           setList([]);
+          setTotal(0);
         }
       } else {
         setList([]);
+        setTotal(0);
       }
     } catch (e) {
       setList([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAdminList();
+    fetchAdminList(page, pageSize);
   }, []);
 
   return (
@@ -88,7 +104,17 @@ const AdminList: React.FC = () => {
             columns={columns}
             dataSource={list}
             loading={loading}
-            pagination={{ pageSize: 10 }}
+            pagination={{
+              current: page,
+              pageSize,
+              total,
+              showSizeChanger: true,
+              pageSizeOptions: [10, 20, 50],
+              showTotal: (t) => `共 ${t} 条`,
+              onChange: (p, ps) => {
+                fetchAdminList(p, ps);
+              }
+            }}
             locale={{ emptyText: <Empty description="暂无数据" /> }}
             rowKey="admin_id"
           />
@@ -120,7 +146,7 @@ const AdminList: React.FC = () => {
                   if (data && data.code === 0) {
                     message.success('操作成功');
                     setOpenAdd(false);
-                    fetchAdminList();
+                    fetchAdminList(page, pageSize);
                   } else {
                     message.error((data && data.msg) || '新增失败');
                   }
