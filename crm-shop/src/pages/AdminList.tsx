@@ -178,7 +178,6 @@ const AdminList: React.FC = () => {
                   const body = {
                     admin_id: current?.admin_id,
                     user_name: values.nickname,
-                    user_phone: values.account,
                     password: values.password,
                     department_id: typeof values.role === 'number' ? values.role : (values.role === 'super' ? 1 : values.role === 'ops' ? 2 : values.role === 'viewer' ? 3 : 0),
                     status: values.enabled ? 'on' : 'off'
@@ -228,7 +227,7 @@ const AdminList: React.FC = () => {
       >
         <Form form={form} labelCol={{ span: 5 }} wrapperCol={{ span: 19 }}>
           <Form.Item label="管理员账号" name="account" rules={[{ required: true, message: '请输入管理员账号' }]}> 
-            <Input placeholder="请输入手机号码" />
+            <Input placeholder="请输入手机号码" disabled={editing} />
           </Form.Item>
           <Form.Item label="管理员密码" name="password" rules={editing ? [] : [{ required: true, message: '请输入管理员密码' }]}> 
             <Input.Password placeholder="请输入管理员密码" />
