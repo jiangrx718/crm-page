@@ -34,9 +34,19 @@ const AdminList: React.FC = () => {
           description={`确定要删除${record.user_name}数据吗？`}
           okText="确定"
           cancelText="取消"
-          onConfirm={() => {
-            setList(prev => prev.filter(item => item.admin_id !== record.admin_id));
-            message.success('已删除');
+          onConfirm={async () => {
+            try {
+              const res = await axios.post(`${API_BASE_URL}/api/admin/delete`, { admin_id: record.admin_id }, { headers: { 'Content-Type': 'application/json' } });
+              const data = res.data;
+              if (data && data.code === 0) {
+                message.success('操作成功');
+                fetchAdminList(page, pageSize);
+              } else {
+                message.error((data && data.msg) || '删除失败');
+              }
+            } catch (e) {
+              message.error('请求失败');
+            }
           }}
         >
           <Button type="link" danger size="small" style={{ padding: 0 }}>删除</Button>
