@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Modal, Radio, message, Tag } from 'antd';
+import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Modal, Radio, message, Tag, Popconfirm } from 'antd';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
@@ -23,7 +23,26 @@ const AdminList: React.FC = () => {
     { title: '状态', dataIndex: 'status', render: (val: string) => (
       <Tag color={val === 'on' ? 'green' : 'red'}>{val === 'on' ? '启用' : '禁用'}</Tag>
     ) },
-    { title: '创建时间', dataIndex: 'created_at' }
+    { title: '创建时间', dataIndex: 'created_at' },
+    { title: '操作', key: 'action', render: (_: any, record: any) => (
+      <div style={{ display: 'flex', gap: 16 }}>
+        <Button type="link" size="small" style={{ padding: 0, color: '#1677ff' }} onClick={() => {
+          message.info(`查看 ${record.user_name} 的详情`);
+        }}>查看详情</Button>
+        <Popconfirm
+          title="删除确认"
+          description={`确定要删除${record.user_name}数据吗？`}
+          okText="确定"
+          cancelText="取消"
+          onConfirm={() => {
+            setList(prev => prev.filter(item => item.admin_id !== record.admin_id));
+            message.success('已删除');
+          }}
+        >
+          <Button type="link" danger size="small" style={{ padding: 0 }}>删除</Button>
+        </Popconfirm>
+      </div>
+    ) }
   ];
 
   const fetchAdminList = async (p: number = 1, ps: number = 10) => {
