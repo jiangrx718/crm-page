@@ -133,12 +133,19 @@ const AdminList: React.FC = () => {
             />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" onClick={() => { setPage(1); fetchAdminList(1, pageSize); }}>查询</Button>
+            <Button type="primary" size="small" style={{ height: 30, fontSize: 14, padding: '10 10px' }} onClick={() => { setPage(1); fetchAdminList(1, pageSize); }}>查询</Button>
           </Form.Item>
         </Form>
 
         <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-start' }}>
-          <Button type="primary" size="small" onClick={() => setOpenAdd(true)}>添加管理员</Button>
+          <Button
+            type="primary"
+            size="small"
+            style={{ height: 30, fontSize: 14, padding: '10px' }}
+            onClick={() => setOpenAdd(true)}
+          >
+            添加管理员
+          </Button>
         </div>
 
         <div style={{ marginTop: 16 }}>
