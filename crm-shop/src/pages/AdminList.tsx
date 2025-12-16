@@ -14,6 +14,8 @@ const AdminList: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [total, setTotal] = useState<number>(0);
+  const [editing, setEditing] = useState<boolean>(false);
+  const [current, setCurrent] = useState<any | null>(null);
 
   const columns = [
     { title: '管理员ID', dataIndex: 'admin_id' },
@@ -27,8 +29,18 @@ const AdminList: React.FC = () => {
     { title: '操作', key: 'action', render: (_: any, record: any) => (
       <div style={{ display: 'flex', gap: 16 }}>
         <Button type="link" size="small" style={{ padding: 0, color: '#1677ff' }} onClick={() => {
-          message.info(`查看 ${record.user_name} 的详情`);
-        }}>查看详情</Button>
+          setEditing(true);
+          setCurrent(record);
+          setOpenAdd(true);
+          form.setFieldsValue({
+            account: record.user_phone,
+            password: undefined,
+            confirm: undefined,
+            nickname: record.user_name,
+            role: record.department_id,
+            enabled: record.status === 'on'
+          });
+        }}>编辑</Button>
         <Popconfirm
           title="删除确认"
           description={`确定要删除${record.user_name}数据吗？`}
@@ -151,36 +163,63 @@ const AdminList: React.FC = () => {
       </Card>
 
       <Modal
-        title="管理员添加"
+        title={editing ? '管理员编辑' : '管理员添加'}
         open={openAdd}
-        onCancel={() => setOpenAdd(false)}
+        onCancel={() => { setOpenAdd(false); setEditing(false); setCurrent(null); form.resetFields(); }}
         width={800}
         destroyOnClose
         footer={[
-          <Button key="cancel" onClick={() => setOpenAdd(false)}>取消</Button>,
+          <Button key="cancel" onClick={() => { setOpenAdd(false); setEditing(false); setCurrent(null); form.resetFields(); }}>取消</Button>,
           <Button key="ok" type="primary" onClick={() => {
             form
               .validateFields()
               .then(async (values) => {
-                const body = {
-                  user_name: values.nickname,
-                  user_phone: values.account,
-                  password: values.password,
-                  department_id: typeof values.role === 'number' ? values.role : (values.role === 'super' ? 1 : values.role === 'ops' ? 2 : values.role === 'viewer' ? 3 : 0),
-                  status: values.enabled ? 1 : 0
-                };
-                try {
-                  const res = await axios.post(`${API_BASE_URL}/api/admin/create`, body, { headers: { 'Content-Type': 'application/json' } });
-                  const data = res.data;
-                  if (data && data.code === 0) {
-                    message.success('操作成功');
-                    setOpenAdd(false);
-                    fetchAdminList(page, pageSize);
-                  } else {
-                    message.error((data && data.msg) || '新增失败');
+                if (editing) {
+                  const body = {
+                    admin_id: current?.admin_id,
+                    user_name: values.nickname,
+                    user_phone: values.account,
+                    password: values.password,
+                    department_id: typeof values.role === 'number' ? values.role : (values.role === 'super' ? 1 : values.role === 'ops' ? 2 : values.role === 'viewer' ? 3 : 0),
+                    status: values.enabled ? 'on' : 'off'
+                  };
+                  try {
+                    const res = await axios.post(`${API_BASE_URL}/api/admin/edit`, body, { headers: { 'Content-Type': 'application/json' } });
+                    const data = res.data;
+                    if (data && data.code === 0) {
+                      message.success('操作成功');
+                      setOpenAdd(false);
+                      setEditing(false);
+                      setCurrent(null);
+                      form.resetFields();
+                      fetchAdminList(page, pageSize);
+                    } else {
+                      message.error((data && data.msg) || '编辑失败');
+                    }
+                  } catch (e) {
+                    message.error('请求失败');
                   }
-                } catch (e) {
-                  message.error('请求失败');
+                } else {
+                  const body = {
+                    user_name: values.nickname,
+                    user_phone: values.account,
+                    password: values.password,
+                    department_id: typeof values.role === 'number' ? values.role : (values.role === 'super' ? 1 : values.role === 'ops' ? 2 : values.role === 'viewer' ? 3 : 0),
+                    status: values.enabled ? 1 : 0
+                  };
+                  try {
+                    const res = await axios.post(`${API_BASE_URL}/api/admin/create`, body, { headers: { 'Content-Type': 'application/json' } });
+                    const data = res.data;
+                    if (data && data.code === 0) {
+                      message.success('操作成功');
+                      setOpenAdd(false);
+                      fetchAdminList(page, pageSize);
+                    } else {
+                      message.error((data && data.msg) || '新增失败');
+                    }
+                  } catch (e) {
+                    message.error('请求失败');
+                  }
                 }
               })
               .catch(() => {});
@@ -191,17 +230,32 @@ const AdminList: React.FC = () => {
           <Form.Item label="管理员账号" name="account" rules={[{ required: true, message: '请输入管理员账号' }]}> 
             <Input placeholder="请输入手机号码" />
           </Form.Item>
-          <Form.Item label="管理员密码" name="password" rules={[{ required: true, message: '请输入管理员密码' }]}> 
+          <Form.Item label="管理员密码" name="password" rules={editing ? [] : [{ required: true, message: '请输入管理员密码' }]}> 
             <Input.Password placeholder="请输入管理员密码" />
           </Form.Item>
           <Form.Item label="确认密码" name="confirm" dependencies={["password"]} rules={[
-            { required: true, message: '请再次输入密码' },
             ({ getFieldValue }) => ({
               validator(_, value) {
-                if (!value || getFieldValue('password') === value) {
+                const pwd = getFieldValue('password');
+                if (!editing) {
+                  if (!value) {
+                    return Promise.reject(new Error('请再次输入密码'));
+                  }
+                  if (pwd !== value) {
+                    return Promise.reject(new Error('两次输入的密码不一致'));
+                  }
+                  return Promise.resolve();
+                } else {
+                  if (pwd) {
+                    if (!value) {
+                      return Promise.reject(new Error('请再次输入密码'));
+                    }
+                    if (pwd !== value) {
+                      return Promise.reject(new Error('两次输入的密码不一致'));
+                    }
+                  }
                   return Promise.resolve();
                 }
-                return Promise.reject(new Error('两次输入的密码不一致'));
               }
             })
           ]}>
