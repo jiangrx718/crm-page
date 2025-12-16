@@ -1,24 +1,53 @@
-import React, { useState } from 'react';
-import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Modal, Radio } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Modal, Radio, message } from 'antd';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 const AdminList: React.FC = () => {
   const [status, setStatus] = useState<string | undefined>();
   const [keyword, setKeyword] = useState<string>('');
   const [openAdd, setOpenAdd] = useState(false);
   const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+  const [list, setList] = useState<any[]>([]);
 
   const columns = [
-    { title: 'ID', dataIndex: 'id' },
-    { title: '身份昵称', dataIndex: 'name' },
-    { title: '状态', dataIndex: 'status' },
-    { title: '操作', dataIndex: 'action' }
+    { title: '管理员ID', dataIndex: 'admin_id' },
+    { title: '管理员昵称', dataIndex: 'user_name' },
+    { title: '手机号码', dataIndex: 'user_phone' },
+    { title: '角色ID', dataIndex: 'department_id' }
   ];
+
+  const fetchAdminList = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_BASE_URL}/api/admin/list`);
+      const data = res.data;
+      if (data && typeof data === 'object') {
+        if (data.code === 0 && data.data) {
+          const arr = Array.isArray(data.data.list) ? data.data.list : Array.isArray(data.data) ? data.data : [];
+          setList(arr);
+        } else {
+          setList([]);
+        }
+      } else {
+        setList([]);
+      }
+    } catch (e) {
+      setList([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdminList();
+  }, []);
 
   return (
     <div>
       <Card>
-        {/* 面包屑导航 */}
         <Breadcrumb style={{ marginBottom: 20 }}>
           <Breadcrumb.Item>
             <Link to="/home">首页</Link>
@@ -57,15 +86,15 @@ const AdminList: React.FC = () => {
         <div style={{ marginTop: 16 }}>
           <Table
             columns={columns}
-            dataSource={[]}
-            pagination={false}
+            dataSource={list}
+            loading={loading}
+            pagination={{ pageSize: 10 }}
             locale={{ emptyText: <Empty description="暂无数据" /> }}
-            rowKey="id"
+            rowKey="admin_id"
           />
         </div>
       </Card>
 
-      {/* 添加管理员弹层 */}
       <Modal
         title="管理员添加"
         open={openAdd}
@@ -77,9 +106,27 @@ const AdminList: React.FC = () => {
           <Button key="ok" type="primary" onClick={() => {
             form
               .validateFields()
-              .then(() => {
-                // 提交逻辑可在此接入接口
-                setOpenAdd(false);
+              .then(async (values) => {
+                const body = {
+                  user_name: values.nickname,
+                  user_phone: values.account,
+                  password: values.password,
+                  department_id: typeof values.role === 'number' ? values.role : (values.role === 'super' ? 1 : values.role === 'ops' ? 2 : values.role === 'viewer' ? 3 : 0),
+                  status: values.enabled ? 1 : 0
+                };
+                try {
+                  const res = await axios.post(`${API_BASE_URL}/api/admin/create`, body, { headers: { 'Content-Type': 'application/json' } });
+                  const data = res.data;
+                  if (data && data.code === 0) {
+                    message.success('操作成功');
+                    setOpenAdd(false);
+                    fetchAdminList();
+                  } else {
+                    message.error((data && data.msg) || '新增失败');
+                  }
+                } catch (e) {
+                  message.error('请求失败');
+                }
               })
               .catch(() => {});
           }}>确定</Button>
@@ -87,7 +134,7 @@ const AdminList: React.FC = () => {
       >
         <Form form={form} labelCol={{ span: 5 }} wrapperCol={{ span: 19 }}>
           <Form.Item label="管理员账号" name="account" rules={[{ required: true, message: '请输入管理员账号' }]}> 
-            <Input placeholder="请输入管理员账号" />
+            <Input placeholder="请输入手机号码" />
           </Form.Item>
           <Form.Item label="管理员密码" name="password" rules={[{ required: true, message: '请输入管理员密码' }]}> 
             <Input.Password placeholder="请输入管理员密码" />
@@ -110,9 +157,9 @@ const AdminList: React.FC = () => {
           </Form.Item>
           <Form.Item label="管理员角色" name="role" rules={[{ required: true, message: '请选择管理员角色' }]}> 
             <Select placeholder="请选择角色" options={[
-              { value: 'super', label: '超级管理员' },
-              { value: 'ops', label: '运营管理员' },
-              { value: 'viewer', label: '只读管理员' }
+              { value: 1, label: '超级管理员' },
+              { value: 2, label: '运营管理员' },
+              { value: 3, label: '只读管理员' }
             ]} />
           </Form.Item>
           <Form.Item label="状态" name="enabled" initialValue={true}>
