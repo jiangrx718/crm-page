@@ -70,9 +70,10 @@ const AdminList: React.FC = () => {
   const fetchAdminList = async (p: number = 1, ps: number = 10) => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_BASE_URL}/api/admin/list`, {
-        params: { limit: ps, offset: p }
-      });
+      const params: any = { limit: ps, offset: p };
+      if (status === 'on' || status === 'off') params.status = status;
+      if (keyword) params.user_phone = keyword;
+      const res = await axios.get(`${API_BASE_URL}/api/admin/list`, { params });
       const data = res.data;
       if (data && typeof data === 'object') {
         if (data.code === 0 && data.data) {
@@ -119,20 +120,20 @@ const AdminList: React.FC = () => {
               placeholder="请选择"
               value={status}
               onChange={setStatus}
-              options={[{ value: 'enabled', label: '启用' }, { value: 'disabled', label: '禁用' }]}
+              options={[{ value: 'on', label: '启用' }, { value: 'off', label: '禁用' }]}
               allowClear
             />
           </Form.Item>
-          <Form.Item label="身份昵称">
+          <Form.Item label="手机号">
             <Input
               style={{ width: 280 }}
-              placeholder="请输入身份昵称"
+              placeholder="请输入手机号"
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
             />
           </Form.Item>
           <Form.Item>
-            <Button type="primary">查询</Button>
+            <Button type="primary" onClick={() => { setPage(1); fetchAdminList(1, pageSize); }}>查询</Button>
           </Form.Item>
         </Form>
 
