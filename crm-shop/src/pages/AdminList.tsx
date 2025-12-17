@@ -237,8 +237,29 @@ const AdminList: React.FC = () => {
         ]}
       >
         <Form form={form} labelCol={{ span: 5 }} wrapperCol={{ span: 19 }}>
-          <Form.Item label="管理员账号" name="account" rules={[{ required: true, message: '请输入管理员账号' }]}> 
-            <Input placeholder="请输入手机号码" disabled={editing} />
+          <Form.Item
+            label="管理员账号"
+            name="account"
+            rules={[
+              { required: true, message: '请输入管理员账号' },
+              { pattern: /^1[3-9]\d{9}$/, message: '请输入有效的手机号码（11位）' }
+            ]}
+          > 
+            <Input
+              placeholder="请输入手机号码"
+              disabled={editing}
+              type="tel"
+              inputMode="numeric"
+              maxLength={11}
+              onChange={(e) => {
+                // 仅保留数字
+                const v = e.target.value.replace(/\D/g, '');
+                if (v !== e.target.value) {
+                  // 同步到表单字段，保持只数字输入
+                  form.setFieldsValue({ account: v });
+                }
+              }}
+            />
           </Form.Item>
           <Form.Item label="管理员昵称" name="nickname" rules={[{ required: true, message: '请输入管理员昵称' }]}> 
             <Input placeholder="请输入管理员昵称" disabled={editing} />
