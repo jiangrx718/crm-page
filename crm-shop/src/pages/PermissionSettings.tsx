@@ -278,19 +278,6 @@ const PermissionSettings: React.FC = () => {
             { title: '权限设置' },
           ]}
         />
-        <Form layout="inline" style={{ background: '#f7f8fa', padding: 16, borderRadius: 8 }}>
-          <Form.Item label="权限名称">
-            <Input
-              style={{ width: 280 }}
-              placeholder="请输入权限名称"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-            />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary">查询</Button>
-          </Form.Item>
-        </Form>
 
         <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-start' }}>
           <Button
