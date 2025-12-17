@@ -108,6 +108,17 @@ const PermissionSettings: React.FC = () => {
         : it;
     });
 
+  const findPermissionById = (items: Permission[], id: number): Permission | undefined => {
+    for (const item of items) {
+      if (item.id === id) return item;
+      if (item.children) {
+        const found = findPermissionById(item.children, id);
+        if (found) return found;
+      }
+    }
+    return undefined;
+  };
+
   const removeById = (items: Permission[], id: number): Permission[] => {
     const walk = (list: Permission[]): Permission[] =>
       list
@@ -244,22 +255,26 @@ const PermissionSettings: React.FC = () => {
             type="primary"
             onClick={() => {
               form.validateFields().then((vals) => {
-                const newItem: Permission = {
-                  id: Date.now(),
-                  name: vals.name,
-                  type: vals.type,
-                  sort: Number(vals.sort || 0),
-                  visible: !!vals.visible,
-                  ...(vals.parentId ? { parentId: vals.parentId } : {}),
+                const parentPermission = vals.parentId ? findPermissionById(permissions, vals.parentId) : null;
+                const parentId = parentPermission?.permission_id || '';
+                
+                const payload = {
+                  permission_name: vals.name,
+                  permission_url: vals.type,
+                  parent_id: parentId,
+                  status: vals.visible ? 'on' : 'off',
+                  position: Number(vals.sort || 0),
                 };
-                setPermissions((prev) => {
-                  if (vals.parentId) {
-                    return addUnderParent(prev, vals.parentId, newItem);
-                  }
-                  return [newItem, ...prev];
+
+                axios.post(`${API_BASE_URL}/api/permission/create`, payload).then(() => {
+                  message.success('权限项添加成功');
+                  setOpenAdd(false);
+                  form.resetFields();
+                  fetchPermissions();
+                }).catch((error) => {
+                  message.error('添加权限项失败');
+                  console.error(error);
                 });
-                setOpenAdd(false);
-                form.resetFields();
               });
             }}
           >
