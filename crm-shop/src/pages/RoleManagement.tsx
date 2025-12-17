@@ -19,6 +19,8 @@ const RoleManagement: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const hasInitialized = React.useRef(false);
+  const [editing, setEditing] = useState(false);
+  const [currentRole, setCurrentRole] = useState<any | null>(null);
 
   const toTreeNodes = (items: any[]): any[] =>
     items.map((item) => ({
@@ -97,6 +99,8 @@ const RoleManagement: React.FC = () => {
           size="small"
           style={{ padding: 0, color: '#1677ff' }}
           onClick={() => {
+            setEditing(true);
+            setCurrentRole(record);
             setOpenAdd(true);
             form.setFieldsValue({
               roleName: record.role_name,
@@ -153,7 +157,13 @@ const RoleManagement: React.FC = () => {
               type="primary"
               size="small"
               style={{ height: 30, fontSize: 14, padding: '10px' }}
-              onClick={() => setOpenAdd(true)}
+              onClick={() => {
+                setEditing(false);
+                setCurrentRole(null);
+                form.resetFields();
+                setCheckedKeys([]);
+                setOpenAdd(true);
+              }}
             >
               添加角色
             </Button>
@@ -179,11 +189,17 @@ const RoleManagement: React.FC = () => {
 
       {/* 添加角色弹层 */}
       <Modal
-        title="添加角色"
+        title={editing ? '修改角色' : '添加角色'}
         open={openAdd}
         width={800}
         destroyOnClose
-        onCancel={() => setOpenAdd(false)}
+        onCancel={() => {
+          setOpenAdd(false);
+          setEditing(false);
+          setCurrentRole(null);
+          form.resetFields();
+          setCheckedKeys([]);
+        }}
         footer={[
           <Button key="cancel" onClick={() => setOpenAdd(false)}>取消</Button>,
           <Button key="ok" type="primary" onClick={() => {
@@ -194,16 +210,23 @@ const RoleManagement: React.FC = () => {
                 permission: Array.isArray(checkedKeys) ? checkedKeys : [],
               };
               try {
-                const res = await axios.post(`${API_BASE_URL}/api/role/create`, payload, { headers: { 'Content-Type': 'application/json' } });
+                let res;
+                if (editing && currentRole?.role_id) {
+                  res = await axios.post(`${API_BASE_URL}/api/role/edit`, { role_id: currentRole.role_id, ...payload }, { headers: { 'Content-Type': 'application/json' } });
+                } else {
+                  res = await axios.post(`${API_BASE_URL}/api/role/create`, payload, { headers: { 'Content-Type': 'application/json' } });
+                }
                 const data = res.data;
                 if (data && data.code === 0) {
                   message.success('操作成功');
                   setOpenAdd(false);
+                  setEditing(false);
+                  setCurrentRole(null);
                   form.resetFields();
                   setCheckedKeys([]);
                   fetchRoleList(page, pageSize);
                 } else {
-                  message.error((data && data.msg) || '新增失败');
+                  message.error((data && data.msg) || (editing ? '编辑失败' : '新增失败'));
                 }
               } catch {
                 message.error('请求失败');
