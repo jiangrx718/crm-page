@@ -267,7 +267,7 @@ const PermissionSettings: React.FC = () => {
           </Button>,
         ]}
       >
-        <Form form={form} layout="horizontal" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }} requiredMark={false}>
+        <Form form={form} layout="vertical" requiredMark={false}>
           <Form.Item label="权限名称" name="name" rules={[{ required: true, message: '请输入权限名称' }]}> 
             <Input placeholder="请输入权限名称" />
           </Form.Item>
@@ -283,7 +283,7 @@ const PermissionSettings: React.FC = () => {
           <Form.Item label="权限路径" name="type" rules={[{ required: true, message: '请输入权限路径' }]}> 
             <Input placeholder="例如：/home" />
           </Form.Item>
-          <Form.Item label="排序" name="sort" rules={[{ required: true, message: '请输入排序值' }]}> 
+          <Form.Item label="排序" name="sort" initialValue={100} rules={[{ required: true, message: '请输入排序值' }]}> 
             <InputNumber style={{ width: '100%' }} min={0} placeholder="请输入排序" />
           </Form.Item>
           <Form.Item label="状态" name="visible" initialValue={true}> 
@@ -338,7 +338,7 @@ const PermissionSettings: React.FC = () => {
           </Button>,
         ]}
       >
-        <Form form={editForm} layout="horizontal" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }} requiredMark={false}>
+        <Form form={editForm} layout="vertical" requiredMark={false}>
           <Form.Item label="权限名称" name="name" rules={[{ required: true, message: '请输入权限名称' }]}> 
             <Input placeholder="请输入权限名称" />
           </Form.Item>
@@ -351,7 +351,7 @@ const PermissionSettings: React.FC = () => {
               style={{ width: '100%' }}
             />
           </Form.Item>
-          <Form.Item label="类型" name="type" rules={[{ required: true, message: '请输入类型路径' }]}> 
+          <Form.Item label="权限路径" name="type" rules={[{ required: true, message: '请输入权限路径' }]}> 
             <Input placeholder="例如：/admin/index" />
           </Form.Item>
           <Form.Item label="排序" name="sort" rules={[{ required: true, message: '请输入排序值' }]}> 
