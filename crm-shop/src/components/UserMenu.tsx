@@ -37,7 +37,6 @@ const UserMenu: React.FC = () => {
           paddingRight: 16,
           height: '100%',
           backgroundColor: '#1677ff',
-          borderRadius: 4,
           cursor: 'pointer',
           transition: 'all 0.3s'
         }}
