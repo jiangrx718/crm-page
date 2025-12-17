@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 import { Card, Form, Input, Button, Table, Empty, Breadcrumb, Modal, InputNumber, Switch, TreeSelect, Tooltip, Popconfirm, Radio, Spin, message } from 'antd';
@@ -35,8 +35,12 @@ const PermissionSettings: React.FC = () => {
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
 
+  const hasInitialized = useRef(false);
   useEffect(() => {
-    fetchPermissions();
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      fetchPermissions();
+    }
   }, []);
 
   // 自动展开所有行
