@@ -372,23 +372,25 @@ const PermissionSettings: React.FC = () => {
             onClick={() => {
               editForm.validateFields().then((vals) => {
                 if (!editing) return;
-                const updated: Permission = {
-                  ...editing,
-                  name: vals.name,
-                  type: vals.type,
-                  sort: Number(vals.sort || 0),
-                  visible: !!vals.visible,
-                  parentId: vals.parentId,
+                const parentPermission = vals.parentId ? findPermissionById(permissions, vals.parentId) : null;
+                const parentId = parentPermission?.permission_id || '';
+                const payload = {
+                  permission_id: editing.permission_id || '',
+                  permission_name: vals.name,
+                  permission_url: vals.type,
+                  parent_id: parentId,
+                  status: vals.visible ? 'on' : 'off',
+                  position: Number(vals.sort || 0),
                 };
-                setPermissions((prev) => {
-                  const afterRemoval = removeById(prev, editing.id);
-                  if (updated.parentId) {
-                    return addUnderParent(afterRemoval, updated.parentId, updated);
-                  }
-                  return [updated, ...afterRemoval];
+                axios.post(`${API_BASE_URL}/api/permission/edit`, payload).then(() => {
+                  message.success('权限项更新成功');
+                  setShowEdit(false);
+                  setEditing(null);
+                  fetchPermissions();
+                }).catch((error) => {
+                  message.error('更新权限项失败');
+                  console.error(error);
                 });
-                setShowEdit(false);
-                setEditing(null);
               });
             }}
           >
