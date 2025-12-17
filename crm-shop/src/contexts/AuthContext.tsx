@@ -4,6 +4,7 @@ import axios from 'axios';
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (token: string) => void;
   logout: () => void;
 }
@@ -12,6 +13,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     // 检查是否存在有效的认证令牌
@@ -20,6 +22,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsAuthenticated(true);
       axios.defaults.headers.common['Authorization'] = token;
     }
+    // 初始化完成，可以进行路由判断
+    setIsLoading(false);
   }, []);
 
   const login = (token: string) => {
@@ -36,6 +40,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const value = {
     isAuthenticated,
+    isLoading,
     login,
     logout
   };

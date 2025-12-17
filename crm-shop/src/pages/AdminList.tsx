@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Modal, Radio, message, Tag, Popconfirm } from 'antd';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
@@ -16,6 +16,7 @@ const AdminList: React.FC = () => {
   const [total, setTotal] = useState<number>(0);
   const [editing, setEditing] = useState<boolean>(false);
   const [current, setCurrent] = useState<any | null>(null);
+  const hasInitialized = useRef(false);
 
   const columns = [
     { title: '管理员ID', dataIndex: 'admin_id' },
@@ -100,7 +101,10 @@ const AdminList: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchAdminList(page, pageSize);
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      fetchAdminList(page, pageSize);
+    }
   }, []);
 
   return (
