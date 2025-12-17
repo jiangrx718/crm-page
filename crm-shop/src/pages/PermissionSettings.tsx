@@ -164,16 +164,28 @@ const PermissionSettings: React.FC = () => {
   };
 
   const treeOptions = React.useMemo(() => toTreeData(permissions), [permissions]);
+  const findByPermissionId = (items: Permission[], pid?: string): Permission | undefined => {
+    if (!pid) return undefined;
+    for (const item of items) {
+      if (item.permission_id === pid) return item;
+      if (item.children && item.children.length) {
+        const found = findByPermissionId(item.children, pid);
+        if (found) return found;
+      }
+    }
+    return undefined;
+  };
 
   const onEdit = (record: Permission) => {
     setEditing(record);
     setShowEdit(true);
+    const parentNode = findByPermissionId(permissions, record.parent_id);
     editForm.setFieldsValue({
       name: record.name,
       type: record.type,
       sort: record.sort,
       visible: record.visible,
-      parentId: record.parentId,
+      parentId: parentNode ? parentNode.id : undefined,
     });
   };
 
