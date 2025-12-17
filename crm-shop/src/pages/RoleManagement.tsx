@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Button, Table, Empty, Breadcrumb, Modal, Radio, Tree, Spin, message } from 'antd';
+import { Card, Form, Input, Button, Table, Empty, Breadcrumb, Modal, Radio, Tree, Spin, message, Tag, Popconfirm } from 'antd';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
@@ -13,6 +13,12 @@ const RoleManagement: React.FC = () => {
   const [autoExpandParent, setAutoExpandParent] = useState(true);
   const [permLoading, setPermLoading] = useState(false);
   const [permTreeData, setPermTreeData] = useState<any[]>([]);
+  const [roleList, setRoleList] = useState<any[]>([]);
+  const [roleLoading, setRoleLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+  const hasInitialized = React.useRef(false);
 
   const toTreeNodes = (items: any[]): any[] =>
     items.map((item) => ({
@@ -46,11 +52,88 @@ const RoleManagement: React.FC = () => {
     }
   }, [openAdd]);
 
+  const fetchRoleList = async (p: number = 1, ps: number = 10) => {
+    try {
+      setRoleLoading(true);
+      const res = await axios.get(`${API_BASE_URL}/api/role/list`, { params: { limit: ps, offset: p } });
+      const data = res.data;
+      if (data && data.code === 0 && data.data) {
+        const arr = Array.isArray(data.data.list) ? data.data.list : [];
+        const cnt = typeof data.data.count === 'number' ? data.data.count : 0;
+        setRoleList(arr);
+        setTotal(cnt);
+        setPage(p);
+        setPageSize(ps);
+      } else {
+        setRoleList([]);
+        setTotal(0);
+      }
+    } catch {
+      setRoleList([]);
+      setTotal(0);
+    } finally {
+      setRoleLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      fetchRoleList(page, pageSize);
+    }
+  }, []);
+
   const columns = [
-    { title: 'ID', dataIndex: 'id' },
-    { title: '身份昵称', dataIndex: 'name' },
-    { title: '状态', dataIndex: 'status' },
-    { title: '操作', dataIndex: 'action' }
+    { title: '角色ID', dataIndex: 'role_id' },
+    { title: '角色名称', dataIndex: 'role_name' },
+    { title: '状态', dataIndex: 'status', render: (val: string) => (
+      <Tag color={val === 'on' ? 'green' : 'red'}>{val === 'on' ? '启用' : '禁用'}</Tag>
+    ) },
+    { title: '创建时间', dataIndex: 'created_at' },
+    { title: '操作', key: 'action', render: (_: any, record: any) => (
+      <div style={{ display: 'flex', gap: 16 }}>
+        <Button
+          type="link"
+          size="small"
+          style={{ padding: 0, color: '#1677ff' }}
+          onClick={() => {
+            setOpenAdd(true);
+            form.setFieldsValue({
+              roleName: record.role_name,
+              enabled: record.status === 'on',
+            });
+          }}
+        >
+          编辑
+        </Button>
+        <Popconfirm
+          title="删除确认"
+          description={`确定要删除角色【${record.role_name}】吗？`}
+          okText="确定"
+          cancelText="取消"
+          onConfirm={async () => {
+            try {
+              const res = await axios.post(
+                `${API_BASE_URL}/api/role/delete`,
+                { role_id: record.role_id },
+                { headers: { 'Content-Type': 'application/json' } }
+              );
+              const data = res.data;
+              if (data && data.code === 0) {
+                message.success('操作成功');
+                fetchRoleList(page, pageSize);
+              } else {
+                message.error((data && data.msg) || '删除失败');
+              }
+            } catch {
+              message.error('请求失败');
+            }
+          }}
+        >
+          <Button type="link" danger size="small" style={{ padding: 0 }}>删除</Button>
+        </Popconfirm>
+      </div>
+    ) },
   ];
 
   return (
@@ -79,10 +162,17 @@ const RoleManagement: React.FC = () => {
         <div style={{ marginTop: 16 }}>
           <Table
             columns={columns}
-            dataSource={[]}
-            pagination={false}
+            dataSource={roleList}
+            loading={roleLoading}
+            pagination={{
+              current: page,
+              pageSize,
+              total,
+              showSizeChanger: false,
+              onChange: (cp) => fetchRoleList(cp, pageSize)
+            }}
             locale={{ emptyText: <Empty description="暂无数据" /> }}
-            rowKey="id"
+            rowKey="role_id"
           />
         </div>
       </Card>
