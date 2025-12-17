@@ -1,6 +1,7 @@
 import { Layout } from 'antd';
 import { HashRouter as Router, Route, Routes } from 'react-router-dom'; // 修改这里：BrowserRouter → HashRouter
 import SideMenu from './components/SideMenu';
+import UserMenu from './components/UserMenu';
 import DataConversion from './pages/DataConversion';
 import ModelTraining from './pages/ModelTraining';
 import DataInference from './pages/DataInference';
@@ -28,8 +29,9 @@ const { Header, Content, Sider } = Layout;
 function AppLayout() {
   return (
     <Layout className="app-container">
-      <Header className="app-header">
+      <Header className="app-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: 24 }}>
         <div className="app-logo">CRM商品管理后台系统</div>
+        <UserMenu />
       </Header>
       <Layout className="app-layout">
         <Sider className="app-sider" width={200}>

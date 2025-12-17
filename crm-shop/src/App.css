@@ -20,6 +20,10 @@ body {
   z-index: 100;
   background: #fff !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding-left: 24px !important;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .logo {

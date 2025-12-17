@@ -81,7 +81,7 @@ const Login: React.FC = () => {
       });
       const data = res.data;
       if (data && data.code === 0 && data.data && data.data.token) {
-        login(data.data.token);
+        login(data.data.token, values.account);
         message.success('登录成功');
         navigate('/home');
       } else {
