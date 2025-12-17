@@ -106,6 +106,7 @@ const RoleManagement: React.FC = () => {
               roleName: record.role_name,
               enabled: record.status === 'on',
             });
+            setCheckedKeys(Array.isArray(record.permission) ? record.permission : []);
           }}
         >
           编辑
