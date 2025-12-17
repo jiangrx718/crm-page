@@ -192,8 +192,10 @@ const RoleManagement: React.FC = () => {
       <Modal
         title={editing ? '修改角色' : '添加角色'}
         open={openAdd}
-        width={800}
+        width={720}
         destroyOnClose
+        className="compact-modal"
+        bodyStyle={{ padding: 12 }}
         onCancel={() => {
           setOpenAdd(false);
           setEditing(false);
@@ -236,7 +238,7 @@ const RoleManagement: React.FC = () => {
           }}>提交</Button>
         ]}
       >
-        <Form form={form} labelCol={{ span: 5 }} wrapperCol={{ span: 19 }}>
+        <Form form={form} labelCol={{ span: 4 }} wrapperCol={{ span: 20 }} style={{ margin: 0 }}>
           <Form.Item label="角色名称" name="roleName" rules={[{ required: true, message: '请输入角色名称' }]}> 
             <Input placeholder="请输入角色名称" />
           </Form.Item>
