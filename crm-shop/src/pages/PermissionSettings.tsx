@@ -185,8 +185,23 @@ const PermissionSettings: React.FC = () => {
           checked={record.visible}
           checkedChildren="开启"
           unCheckedChildren="关闭"
-          onChange={(checked) => {
+          onChange={async (checked) => {
+            const prevChecked = record.visible;
+            const status = checked ? 'on' : 'off';
             setPermissions((prev) => updateById(prev, record.id, (it) => ({ ...it, visible: checked })));
+            try {
+              const res = await axios.post(`${API_BASE_URL}/api/permission/status`, { permission_id: record.permission_id, status }, { headers: { 'Content-Type': 'application/json' } });
+              const data = res.data;
+              if (!(data && data.code === 0)) {
+                message.error((data && data.msg) || '更新状态失败');
+                setPermissions((prev) => updateById(prev, record.id, (it) => ({ ...it, visible: prevChecked })));
+              } else {
+                message.success('操作成功');
+              }
+            } catch {
+              message.error('请求失败');
+              setPermissions((prev) => updateById(prev, record.id, (it) => ({ ...it, visible: prevChecked })));
+            }
           }}
         />
       ),
