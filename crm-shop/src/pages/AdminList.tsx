@@ -240,6 +240,9 @@ const AdminList: React.FC = () => {
           <Form.Item label="管理员账号" name="account" rules={[{ required: true, message: '请输入管理员账号' }]}> 
             <Input placeholder="请输入手机号码" disabled={editing} />
           </Form.Item>
+          <Form.Item label="管理员昵称" name="nickname" rules={[{ required: true, message: '请输入管理员昵称' }]}> 
+            <Input placeholder="请输入管理员昵称" disabled={editing} />
+          </Form.Item>
           <Form.Item label="管理员密码" name="password" rules={editing ? [] : [{ required: true, message: '请输入管理员密码' }]}> 
             <Input.Password placeholder="请输入管理员密码" />
           </Form.Item>
@@ -270,9 +273,6 @@ const AdminList: React.FC = () => {
             })
           ]}>
             <Input.Password placeholder="请确认密码" />
-          </Form.Item>
-          <Form.Item label="管理员昵称" name="nickname" rules={[{ required: true, message: '请输入管理员昵称' }]}> 
-            <Input placeholder="请输入管理员昵称" />
           </Form.Item>
           <Form.Item label="管理员角色" name="role" rules={[{ required: true, message: '请选择管理员角色' }]}> 
             <Select placeholder="请选择角色" options={[
