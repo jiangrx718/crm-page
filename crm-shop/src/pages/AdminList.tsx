@@ -216,7 +216,7 @@ const AdminList: React.FC = () => {
                     user_phone: values.account,
                     password: values.password,
                     department_id: typeof values.role === 'number' ? values.role : (values.role === 'super' ? 1 : values.role === 'ops' ? 2 : values.role === 'viewer' ? 3 : 0),
-                    status: values.enabled ? 1 : 0
+                    status: values.enabled ? "on" : "off"
                   };
                   try {
                     const res = await axios.post(`${API_BASE_URL}/api/admin/create`, body, { headers: { 'Content-Type': 'application/json' } });
