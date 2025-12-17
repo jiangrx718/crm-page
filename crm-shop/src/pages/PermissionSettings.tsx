@@ -146,23 +146,6 @@ const PermissionSettings: React.FC = () => {
     return undefined;
   };
 
-  const removeById = (items: Permission[], id: number): Permission[] => {
-    const walk = (list: Permission[]): Permission[] =>
-      list
-        .filter((node) => node.id !== id)
-        .map((node) =>
-          node.children ? { ...node, children: walk(node.children) } : node
-        )
-        .map((node) => {
-          if (node.children && node.children.length === 0) {
-            const { children, ...rest } = node as any;
-            return rest as Permission;
-          }
-          return node;
-        });
-    return walk(items);
-  };
-
   const treeOptions = React.useMemo(() => toTreeData(permissions), [permissions]);
   const findByPermissionId = (items: Permission[], pid?: string): Permission | undefined => {
     if (!pid) return undefined;
@@ -217,30 +200,36 @@ const PermissionSettings: React.FC = () => {
         return (
           <div style={{ display: 'flex', gap: 8 }}>
             <Button type="link" size="small" onClick={() => onEdit(record)}>编辑</Button>
-            {hasChildren ? (
-              <Tooltip title="存在下级分类，请先删除下级分类">
-                <Button type="link" size="small" danger disabled>删除</Button>
-              </Tooltip>
-            ) : (
-              <Popconfirm
-                title="确认删除该权限项？"
-                description={`删除后不可恢复（名称：${record.name}）。`}
-                okText="删除"
+          {hasChildren ? (
+            <Tooltip title="存在下级分类，请先删除下级分类">
+              <Button type="link" size="small" danger disabled>删除</Button>
+            </Tooltip>
+          ) : (
+            <Popconfirm
+                title="删除确认"
+                description={`确定要删除权限项【${record.name}】吗？`}
+                okText="确定"
                 cancelText="取消"
-                okButtonProps={{ danger: true }}
-                onConfirm={() => {
-                  axios.post(`${API_BASE_URL}/api/permission/delete`, {
-                    permission_id: record.permission_id,
-                  }).then(() => {
-                    message.success('权限项删除成功');
-                    setPermissions((prev) => removeById(prev, record.id));
-                  }).catch((error) => {
-                    message.error('删除权限项失败');
-                    console.error(error);
-                  });
+                onConfirm={async () => {
+                  try {
+                    const res = await axios.post(
+                      `${API_BASE_URL}/api/permission/delete`,
+                      { permission_id: record.permission_id },
+                      { headers: { 'Content-Type': 'application/json' } }
+                    );
+                    const data = res.data;
+                    if (data && data.code === 0) {
+                      message.success('操作成功');
+                      fetchPermissions();
+                    } else {
+                      message.error((data && data.msg) || '删除失败');
+                    }
+                  } catch (error) {
+                    message.error('请求失败');
+                  }
                 }}
               >
-                <Button type="link" size="small" danger>删除</Button>
+                <Button type="link" size="small" danger style={{ padding: 0 }}>删除</Button>
               </Popconfirm>
             )}
           </div>
