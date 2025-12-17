@@ -33,10 +33,33 @@ const PermissionSettings: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
 
   useEffect(() => {
     fetchPermissions();
   }, []);
+
+  // 自动展开所有行
+  useEffect(() => {
+    if (permissions.length > 0) {
+      const allKeys = extractAllKeys(permissions);
+      setExpandedRowKeys(allKeys);
+    }
+  }, [permissions]);
+
+  const extractAllKeys = (items: Permission[]): React.Key[] => {
+    const keys: React.Key[] = [];
+    const collect = (items: Permission[]) => {
+      items.forEach((item) => {
+        keys.push(item.id);
+        if (item.children && item.children.length > 0) {
+          collect(item.children);
+        }
+      });
+    };
+    collect(items);
+    return keys;
+  };
 
   const fetchPermissions = async () => {
     try {
@@ -233,6 +256,14 @@ const PermissionSettings: React.FC = () => {
               pagination={false}
               size="small"
               indentSize={16}
+              expandedRowKeys={expandedRowKeys}
+              onExpand={(expanded, record) => {
+                if (expanded) {
+                  setExpandedRowKeys((prev) => [...prev, record.id]);
+                } else {
+                  setExpandedRowKeys((prev) => prev.filter((key) => key !== record.id));
+                }
+              }}
               locale={{ emptyText: <Empty description="暂无数据" /> }}
               rowKey="id"
             />
