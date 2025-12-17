@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import axios from 'axios';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -17,17 +18,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const token = localStorage.getItem('authToken');
     if (token) {
       setIsAuthenticated(true);
+      axios.defaults.headers.common['Authorization'] = token;
     }
   }, []);
 
   const login = (token: string) => {
     localStorage.setItem('authToken', token);
     setIsAuthenticated(true);
+    axios.defaults.headers.common['Authorization'] = token;
   };
 
   const logout = () => {
     localStorage.removeItem('authToken');
     setIsAuthenticated(false);
+    delete axios.defaults.headers.common['Authorization'];
   };
 
   const value = {

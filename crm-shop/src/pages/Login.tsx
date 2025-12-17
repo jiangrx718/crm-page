@@ -3,6 +3,8 @@ import { Card, Form, Input, Button, message } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -73,17 +75,18 @@ const Login: React.FC = () => {
 
   const onFinish = async (values: any) => {
     try {
-      // 模拟登录请求
-      // 在实际应用中，这里应该调用后端API进行身份验证
-      console.log('登录信息:', values);
-      
-      // 模拟登录成功
-      // 实际应用中应该从服务器获取真实的认证令牌
-      const fakeToken = 'fake-jwt-token-' + Date.now();
-      login(fakeToken);
-      
-      message.success('登录成功');
-      navigate('/home');
+      const res = await axios.post(`${API_BASE_URL}/login/do`, {
+        user_name: values.account,
+        password: values.password
+      });
+      const data = res.data;
+      if (data && data.code === 0 && data.data && data.data.token) {
+        login(data.data.token);
+        message.success('登录成功');
+        navigate('/home');
+      } else {
+        message.error((data && data.msg) || '登录失败');
+      }
     } catch (error) {
       message.error('登录失败，请检查用户名和密码');
     }
