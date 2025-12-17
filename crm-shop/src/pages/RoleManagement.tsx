@@ -187,8 +187,27 @@ const RoleManagement: React.FC = () => {
         footer={[
           <Button key="cancel" onClick={() => setOpenAdd(false)}>取消</Button>,
           <Button key="ok" type="primary" onClick={() => {
-            form.validateFields().then(() => {
-              setOpenAdd(false);
+            form.validateFields().then(async (vals) => {
+              const payload = {
+                role_name: vals.roleName,
+                status: vals.enabled ? 'on' : 'off',
+                permission: Array.isArray(checkedKeys) ? checkedKeys : [],
+              };
+              try {
+                const res = await axios.post(`${API_BASE_URL}/api/role/create`, payload, { headers: { 'Content-Type': 'application/json' } });
+                const data = res.data;
+                if (data && data.code === 0) {
+                  message.success('操作成功');
+                  setOpenAdd(false);
+                  form.resetFields();
+                  setCheckedKeys([]);
+                  fetchRoleList(page, pageSize);
+                } else {
+                  message.error((data && data.msg) || '新增失败');
+                }
+              } catch {
+                message.error('请求失败');
+              }
             });
           }}>提交</Button>
         ]}
@@ -197,10 +216,10 @@ const RoleManagement: React.FC = () => {
           <Form.Item label="角色名称" name="roleName" rules={[{ required: true, message: '请输入角色名称' }]}> 
             <Input placeholder="请输入角色名称" />
           </Form.Item>
-          <Form.Item label="是否开启" name="enabled" initialValue={true}> 
+          <Form.Item label="状态" name="enabled" initialValue={true}> 
             <Radio.Group>
-              <Radio value={true}>开启</Radio>
-              <Radio value={false}>关闭</Radio>
+              <Radio value={true}>启用</Radio>
+              <Radio value={false}>禁用</Radio>
             </Radio.Group>
           </Form.Item>
           <Form.Item label="权限">
