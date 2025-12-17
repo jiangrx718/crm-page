@@ -96,6 +96,11 @@ const Login: React.FC = () => {
       const msg = '登录失败，请检查用户名和密码';
       setLoginError(msg);
       message.error(msg);
+    } finally {
+      // 每次提交后刷新验证码并清空验证码输入
+      try {
+        refreshCaptcha();
+      } catch (e) {}
     }
   };
 
