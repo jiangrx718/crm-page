@@ -1,17 +1,27 @@
-import React, { useState } from 'react';
-import { Card, Form, Input, Button, Table, Empty, Breadcrumb, Modal, InputNumber, Switch, TreeSelect, Tooltip, Popconfirm, Radio } from 'antd';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
+import { Card, Form, Input, Button, Table, Empty, Breadcrumb, Modal, InputNumber, Switch, TreeSelect, Tooltip, Popconfirm, Radio, Spin, message } from 'antd';
 import { PictureOutlined, HomeOutlined, SearchOutlined, SettingOutlined, UserOutlined, PhoneOutlined, QuestionCircleOutlined, InfoCircleOutlined, MinusOutlined, PlusOutlined, CheckOutlined, CloseOutlined, ZoomInOutlined, ZoomOutOutlined, CloudUploadOutlined, CloudDownloadOutlined, CameraOutlined, AppstoreOutlined, DashboardOutlined, BellOutlined, CloudOutlined, SaveOutlined, EditOutlined, FileTextOutlined, ShopOutlined, ShareAltOutlined, UpOutlined, DownOutlined, LeftOutlined, RightOutlined, ArrowLeftOutlined, ArrowRightOutlined, ExperimentOutlined, SafetyOutlined, ShoppingOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UnorderedListOutlined, BarsOutlined, DatabaseOutlined, ToolOutlined, FolderOutlined, FolderOpenOutlined, ContainerOutlined, ProfileOutlined, IdcardOutlined, CreditCardOutlined, BankOutlined, WalletOutlined, ProjectOutlined, ControlOutlined, FormOutlined, TableOutlined, CalendarOutlined, MoneyCollectOutlined, PayCircleOutlined, QrcodeOutlined, TagOutlined, TagsOutlined, DownloadOutlined, UploadOutlined, ShoppingCartOutlined, MailOutlined, MessageOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
 type Permission = {
   id: number;
   name: string;
-  type: string; // 路径/类型
+  type: string;
   sort: number;
   visible: boolean;
-  icon?: string; // 可选图标地址
-  parentId?: number; // 父级ID
+  icon?: string;
+  parentId?: number;
   children?: Permission[];
+  permission_id?: string;
+  permission_name?: string;
+  permission_url?: string;
+  parent_id?: string;
+  status?: 'on' | 'off';
+  position?: number;
+  created_at?: string;
+  child_list?: Permission[];
 };
 
 const PermissionSettings: React.FC = () => {
@@ -24,43 +34,52 @@ const PermissionSettings: React.FC = () => {
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [iconPickerTarget, setIconPickerTarget] = useState<'add' | 'edit'>('add');
   const [iconQuery, setIconQuery] = useState<string>('');
+  const [loading, setLoading] = useState(false);
 
-  // Mock 数据：与上传图片页面的列表视觉一致（有层级，可展开）
-  const [permissions, setPermissions] = useState<Permission[]>([
-    {
-      id: 1001,
-      name: '主页',
-      type: '/admin/index',
-      sort: 127,
-      visible: true,
-      children: [
-        { id: 1101, name: '仪表盘', type: '/admin/dashboard', sort: 30, visible: true, parentId: 1001 },
-        { id: 1102, name: '欢迎页', type: '/admin/welcome', sort: 20, visible: true, parentId: 1001 },
-      ],
-    },
-    { id: 1002, name: '用户', type: '/admin/user', sort: 125, visible: true },
-    { id: 1003, name: '订单', type: '/admin/order', sort: 120, visible: true },
-    {
-      id: 1004,
-      name: '商品',
-      type: '/admin/product',
-      sort: 115,
-      visible: true,
-      children: [
-        { id: 1401, name: '商品列表', type: '/admin/product/list', sort: 20, visible: true, parentId: 1004 },
-        { id: 1402, name: '商品分类', type: '/admin/product/category', sort: 10, visible: true, parentId: 1004 },
-      ],
-    },
-    { id: 1005, name: '营销', type: '/admin/marketing', sort: 110, visible: true },
-    { id: 1006, name: '分销', type: '/admin/agent', sort: 105, visible: true },
-    { id: 1007, name: '客服', type: '/admin/kefu', sort: 104, visible: true },
-    { id: 1008, name: '财务', type: '/admin/finance', sort: 90, visible: true },
-    { id: 1009, name: '内容', type: '/admin/cms', sort: 85, visible: true },
-    { id: 1010, name: '统计', type: '/admin/setting/pages', sort: 80, visible: true },
-    { id: 1011, name: '应用', type: '/admin/app', sort: 70, visible: true },
-    { id: 1012, name: '设置', type: '/admin/setting', sort: 1, visible: true },
-    { id: 1013, name: '超级', type: '/admin/system', sort: 0, visible: false },
-  ]);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+
+  useEffect(() => {
+    fetchPermissions();
+  }, []);
+
+  const fetchPermissions = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_BASE_URL}/api/permission/list`);
+      const data = res.data;
+      if (data && data.code === 0 && data.data && Array.isArray(data.data.list)) {
+        const converted = convertPermissions(data.data.list);
+        setPermissions(converted);
+      } else {
+        message.error('获取权限列表失败');
+      }
+    } catch (e) {
+      message.error('请求权限列表出错');
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const convertPermissions = (items: any[]): Permission[] => {
+    return items.map((item, index) => ({
+      id: index + Math.random() * 100000,
+      name: item.permission_name,
+      type: item.permission_url,
+      sort: item.position,
+      visible: item.status === 'on',
+      permission_id: item.permission_id,
+      permission_name: item.permission_name,
+      permission_url: item.permission_url,
+      parent_id: item.parent_id,
+      status: item.status,
+      position: item.position,
+      created_at: item.created_at,
+      parentId: item.parent_id ? Math.random() * 100000 : undefined,
+      children: item.child_list && item.child_list.length > 0 ? convertPermissions(item.child_list) : undefined,
+      child_list: item.child_list || [],
+    }));
+  };
 
   const updateById = (items: Permission[], id: number, updater: (it: Permission) => Permission): Permission[] => {
     return items.map((it) => {
@@ -73,7 +92,6 @@ const PermissionSettings: React.FC = () => {
     });
   };
 
-  // 图标候选列表（示例，带 s- 前缀与常用图标）
   const iconChoices = [
     { key: 's-home', icon: <HomeOutlined /> },
     { key: 's-search', icon: <SearchOutlined /> },
@@ -109,47 +127,35 @@ const PermissionSettings: React.FC = () => {
     { key: 's-arrow-left', icon: <ArrowLeftOutlined /> },
     { key: 's-arrow-right', icon: <ArrowRightOutlined /> },
     { key: 's-image', icon: <PictureOutlined /> },
-    // 左侧菜单常用图标
     { key: 's-experiment', icon: <ExperimentOutlined /> },
     { key: 's-safety', icon: <SafetyOutlined /> },
-    { key: 's-setting-gear', icon: <SettingOutlined /> },
-    // 列表/菜单
     { key: 's-list', icon: <UnorderedListOutlined /> },
     { key: 's-bars', icon: <BarsOutlined /> },
     { key: 's-menu-fold', icon: <MenuFoldOutlined /> },
     { key: 's-menu-unfold', icon: <MenuUnfoldOutlined /> },
-    // 数据/表格
     { key: 's-table', icon: <TableOutlined /> },
     { key: 's-database', icon: <DatabaseOutlined /> },
-    // 文件/目录
     { key: 's-folder', icon: <FolderOutlined /> },
     { key: 's-folder-open', icon: <FolderOpenOutlined /> },
     { key: 's-container', icon: <ContainerOutlined /> },
     { key: 's-profile', icon: <ProfileOutlined /> },
     { key: 's-idcard', icon: <IdcardOutlined /> },
     { key: 's-credit-card', icon: <CreditCardOutlined /> },
-    // 业务/财务
     { key: 's-bank', icon: <BankOutlined /> },
     { key: 's-wallet', icon: <WalletOutlined /> },
     { key: 's-money', icon: <MoneyCollectOutlined /> },
     { key: 's-pay', icon: <PayCircleOutlined /> },
-    // 工具/表单
     { key: 's-tool', icon: <ToolOutlined /> },
     { key: 's-form', icon: <FormOutlined /> },
-    // 通讯/消息
     { key: 's-mail', icon: <MailOutlined /> },
     { key: 's-message', icon: <MessageOutlined /> },
-    // 项目/控制
     { key: 's-project', icon: <ProjectOutlined /> },
     { key: 's-control', icon: <ControlOutlined /> },
-    // 下载/上传
     { key: 's-download', icon: <DownloadOutlined /> },
     { key: 's-upload', icon: <UploadOutlined /> },
-    // 标签/二维码
     { key: 's-tag', icon: <TagOutlined /> },
     { key: 's-tags', icon: <TagsOutlined /> },
     { key: 's-qrcode', icon: <QrcodeOutlined /> },
-    // 日历/时间
     { key: 's-calendar', icon: <CalendarOutlined /> },
   ];
 
@@ -159,7 +165,6 @@ const PermissionSettings: React.FC = () => {
     setIconQuery('');
   };
 
-  // 将权限列表转换为 TreeSelect 的数据结构
   const toTreeData = (items: Permission[]): any[] =>
     items.map((it) => ({
       value: it.id,
@@ -167,7 +172,6 @@ const PermissionSettings: React.FC = () => {
       children: it.children ? toTreeData(it.children) : undefined,
     }));
 
-  // 在指定父节点下插入子节点（插入在前面，使新项靠前）
   const addUnderParent = (items: Permission[], parentId: number, child: Permission): Permission[] =>
     items.map((it) => {
       if (it.id === parentId) {
@@ -179,7 +183,6 @@ const PermissionSettings: React.FC = () => {
         : it;
     });
 
-  // 从树中删除指定节点，返回新的树（不保留空 children）
   const removeById = (items: Permission[], id: number): Permission[] => {
     const walk = (list: Permission[]): Permission[] =>
       list
@@ -267,7 +270,6 @@ const PermissionSettings: React.FC = () => {
   return (
     <div>
       <Card>
-        {/* 面包屑导航 - 使用 items 避免弃用警告 */}
         <Breadcrumb
           style={{ marginBottom: 20 }}
           items={[
@@ -295,18 +297,20 @@ const PermissionSettings: React.FC = () => {
         </div>
 
         <div style={{ marginTop: 16 }} className="upload-like-box">
-          <Table
-            columns={columns as any}
-            dataSource={permissions}
-            pagination={false}
-            size="small"
-            indentSize={16}
-            locale={{ emptyText: <Empty description="暂无数据" /> }}
-            rowKey="id"
-          />
+          <Spin spinning={loading}>
+            <Table
+              columns={columns as any}
+              dataSource={permissions}
+              pagination={false}
+              size="small"
+              indentSize={16}
+              locale={{ emptyText: <Empty description="暂无数据" /> }}
+              rowKey="id"
+            />
+          </Spin>
         </div>
       </Card>
-      {/* 添加权限项弹层 - 与上传图片页面保持一致的紧凑横向布局 */}
+
       <Modal
         title="添加权限项"
         open={openAdd}
@@ -391,7 +395,6 @@ const PermissionSettings: React.FC = () => {
         </Form>
       </Modal>
 
-      {/* 编辑权限项弹层 - 预填展示 */}
       <Modal
         title="编辑权限项"
         open={showEdit}
@@ -480,6 +483,7 @@ const PermissionSettings: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
+
       <Modal
         title="图标选择"
         open={iconPickerOpen}
