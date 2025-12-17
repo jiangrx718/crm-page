@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 import { Card, Form, Input, Button, Table, Empty, Breadcrumb, Modal, InputNumber, Switch, TreeSelect, Tooltip, Popconfirm, Radio, Spin, message } from 'antd';
-import { PictureOutlined, HomeOutlined, SearchOutlined, SettingOutlined, UserOutlined, PhoneOutlined, QuestionCircleOutlined, InfoCircleOutlined, MinusOutlined, PlusOutlined, CheckOutlined, CloseOutlined, ZoomInOutlined, ZoomOutOutlined, CloudUploadOutlined, CloudDownloadOutlined, CameraOutlined, AppstoreOutlined, DashboardOutlined, BellOutlined, CloudOutlined, SaveOutlined, EditOutlined, FileTextOutlined, ShopOutlined, ShareAltOutlined, UpOutlined, DownOutlined, LeftOutlined, RightOutlined, ArrowLeftOutlined, ArrowRightOutlined, ExperimentOutlined, SafetyOutlined, ShoppingOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UnorderedListOutlined, BarsOutlined, DatabaseOutlined, ToolOutlined, FolderOutlined, FolderOpenOutlined, ContainerOutlined, ProfileOutlined, IdcardOutlined, CreditCardOutlined, BankOutlined, WalletOutlined, ProjectOutlined, ControlOutlined, FormOutlined, TableOutlined, CalendarOutlined, MoneyCollectOutlined, PayCircleOutlined, QrcodeOutlined, TagOutlined, TagsOutlined, DownloadOutlined, UploadOutlined, ShoppingCartOutlined, MailOutlined, MessageOutlined } from '@ant-design/icons';
+
 import { Link } from 'react-router-dom';
 
 type Permission = {
@@ -25,15 +25,11 @@ type Permission = {
 };
 
 const PermissionSettings: React.FC = () => {
-  const [keyword, setKeyword] = useState<string>('');
   const [openAdd, setOpenAdd] = useState(false);
   const [form] = Form.useForm();
   const [showEdit, setShowEdit] = useState(false);
   const [editForm] = Form.useForm();
   const [editing, setEditing] = useState<Permission | null>(null);
-  const [iconPickerOpen, setIconPickerOpen] = useState(false);
-  const [iconPickerTarget, setIconPickerTarget] = useState<'add' | 'edit'>('add');
-  const [iconQuery, setIconQuery] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
   const [permissions, setPermissions] = useState<Permission[]>([]);
@@ -92,78 +88,7 @@ const PermissionSettings: React.FC = () => {
     });
   };
 
-  const iconChoices = [
-    { key: 's-home', icon: <HomeOutlined /> },
-    { key: 's-search', icon: <SearchOutlined /> },
-    { key: 's-setting', icon: <SettingOutlined /> },
-    { key: 's-user', icon: <UserOutlined /> },
-    { key: 's-phone', icon: <PhoneOutlined /> },
-    { key: 's-help', icon: <QuestionCircleOutlined /> },
-    { key: 's-info', icon: <InfoCircleOutlined /> },
-    { key: 's-minus', icon: <MinusOutlined /> },
-    { key: 's-plus', icon: <PlusOutlined /> },
-    { key: 's-check', icon: <CheckOutlined /> },
-    { key: 's-close', icon: <CloseOutlined /> },
-    { key: 's-zoom-in', icon: <ZoomInOutlined /> },
-    { key: 's-zoom-out', icon: <ZoomOutOutlined /> },
-    { key: 's-cloud-up', icon: <CloudUploadOutlined /> },
-    { key: 's-cloud-down', icon: <CloudDownloadOutlined /> },
-    { key: 's-camera', icon: <CameraOutlined /> },
-    { key: 's-app', icon: <AppstoreOutlined /> },
-    { key: 's-dashboard', icon: <DashboardOutlined /> },
-    { key: 's-bell', icon: <BellOutlined /> },
-    { key: 's-cloud', icon: <CloudOutlined /> },
-    { key: 's-save', icon: <SaveOutlined /> },
-    { key: 's-edit', icon: <EditOutlined /> },
-    { key: 's-file', icon: <FileTextOutlined /> },
-    { key: 's-shop', icon: <ShopOutlined /> },
-    { key: 's-shopping', icon: <ShoppingOutlined /> },
-    { key: 's-shopping-cart', icon: <ShoppingCartOutlined /> },
-    { key: 's-share', icon: <ShareAltOutlined /> },
-    { key: 's-up', icon: <UpOutlined /> },
-    { key: 's-down', icon: <DownOutlined /> },
-    { key: 's-left', icon: <LeftOutlined /> },
-    { key: 's-right', icon: <RightOutlined /> },
-    { key: 's-arrow-left', icon: <ArrowLeftOutlined /> },
-    { key: 's-arrow-right', icon: <ArrowRightOutlined /> },
-    { key: 's-image', icon: <PictureOutlined /> },
-    { key: 's-experiment', icon: <ExperimentOutlined /> },
-    { key: 's-safety', icon: <SafetyOutlined /> },
-    { key: 's-list', icon: <UnorderedListOutlined /> },
-    { key: 's-bars', icon: <BarsOutlined /> },
-    { key: 's-menu-fold', icon: <MenuFoldOutlined /> },
-    { key: 's-menu-unfold', icon: <MenuUnfoldOutlined /> },
-    { key: 's-table', icon: <TableOutlined /> },
-    { key: 's-database', icon: <DatabaseOutlined /> },
-    { key: 's-folder', icon: <FolderOutlined /> },
-    { key: 's-folder-open', icon: <FolderOpenOutlined /> },
-    { key: 's-container', icon: <ContainerOutlined /> },
-    { key: 's-profile', icon: <ProfileOutlined /> },
-    { key: 's-idcard', icon: <IdcardOutlined /> },
-    { key: 's-credit-card', icon: <CreditCardOutlined /> },
-    { key: 's-bank', icon: <BankOutlined /> },
-    { key: 's-wallet', icon: <WalletOutlined /> },
-    { key: 's-money', icon: <MoneyCollectOutlined /> },
-    { key: 's-pay', icon: <PayCircleOutlined /> },
-    { key: 's-tool', icon: <ToolOutlined /> },
-    { key: 's-form', icon: <FormOutlined /> },
-    { key: 's-mail', icon: <MailOutlined /> },
-    { key: 's-message', icon: <MessageOutlined /> },
-    { key: 's-project', icon: <ProjectOutlined /> },
-    { key: 's-control', icon: <ControlOutlined /> },
-    { key: 's-download', icon: <DownloadOutlined /> },
-    { key: 's-upload', icon: <UploadOutlined /> },
-    { key: 's-tag', icon: <TagOutlined /> },
-    { key: 's-tags', icon: <TagsOutlined /> },
-    { key: 's-qrcode', icon: <QrcodeOutlined /> },
-    { key: 's-calendar', icon: <CalendarOutlined /> },
-  ];
 
-  const openIconPicker = (target: 'add' | 'edit') => {
-    setIconPickerTarget(target);
-    setIconPickerOpen(true);
-    setIconQuery('');
-  };
 
   const toTreeData = (items: Permission[]): any[] =>
     items.map((it) => ({
@@ -211,7 +136,6 @@ const PermissionSettings: React.FC = () => {
       sort: record.sort,
       visible: record.visible,
       parentId: record.parentId,
-      icon: record.icon,
     });
   };
 
@@ -320,14 +244,12 @@ const PermissionSettings: React.FC = () => {
             type="primary"
             onClick={() => {
               form.validateFields().then((vals) => {
-                const iconName = (vals.icon || '').trim();
                 const newItem: Permission = {
                   id: Date.now(),
                   name: vals.name,
                   type: vals.type,
                   sort: Number(vals.sort || 0),
                   visible: !!vals.visible,
-                  ...(iconName ? { icon: iconName } : {}),
                   ...(vals.parentId ? { parentId: vals.parentId } : {}),
                 };
                 setPermissions((prev) => {
@@ -361,22 +283,6 @@ const PermissionSettings: React.FC = () => {
           <Form.Item label="权限路径" name="type" rules={[{ required: true, message: '请输入权限路径' }]}> 
             <Input placeholder="例如：/home" />
           </Form.Item>
-          <Form.Item label="图标" name="icon">
-            <Input
-              size="large"
-              style={{ height: 40 }}
-              placeholder="请输入图标名称，如：s-home"
-              suffix={
-                <Button
-                  type="text"
-                  size="large"
-                  icon={<PictureOutlined />}
-                  onClick={() => openIconPicker('add')}
-                  style={{ height: 40, width: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                />
-              }
-            />
-          </Form.Item>
           <Form.Item label="排序" name="sort" rules={[{ required: true, message: '请输入排序值' }]}> 
             <InputNumber style={{ width: '100%' }} min={0} placeholder="请输入排序" />
           </Form.Item>
@@ -407,7 +313,6 @@ const PermissionSettings: React.FC = () => {
             type="primary"
             onClick={() => {
               editForm.validateFields().then((vals) => {
-                const iconName = (vals.icon || '').trim();
                 if (!editing) return;
                 const updated: Permission = {
                   ...editing,
@@ -415,7 +320,6 @@ const PermissionSettings: React.FC = () => {
                   type: vals.type,
                   sort: Number(vals.sort || 0),
                   visible: !!vals.visible,
-                  ...(iconName ? { icon: iconName } : {}),
                   parentId: vals.parentId,
                 };
                 setPermissions((prev) => {
@@ -450,22 +354,6 @@ const PermissionSettings: React.FC = () => {
           <Form.Item label="类型" name="type" rules={[{ required: true, message: '请输入类型路径' }]}> 
             <Input placeholder="例如：/admin/index" />
           </Form.Item>
-          <Form.Item label="图标" name="icon">
-            <Input
-              size="large"
-              style={{ height: 40 }}
-              placeholder="请输入图标名称，如：s-home"
-              suffix={
-                <Button
-                  type="text"
-                  size="large"
-                  icon={<PictureOutlined />}
-                  onClick={() => openIconPicker('edit')}
-                  style={{ height: 40, width: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                />
-              }
-            />
-          </Form.Item>
           <Form.Item label="排序" name="sort" rules={[{ required: true, message: '请输入排序值' }]}> 
             <InputNumber style={{ width: '100%' }} min={0} placeholder="请输入排序" />
           </Form.Item>
@@ -476,54 +364,6 @@ const PermissionSettings: React.FC = () => {
             </Radio.Group>
           </Form.Item>
         </Form>
-      </Modal>
-
-      <Modal
-        title="图标选择"
-        open={iconPickerOpen}
-        width={720}
-        destroyOnClose
-        bodyStyle={{ padding: 12, maxHeight: '60vh', overflow: 'auto' }}
-        onCancel={() => setIconPickerOpen(false)}
-        footer={[<Button key="close" onClick={() => setIconPickerOpen(false)}>关闭</Button>]}
-      >
-        <Input
-          placeholder="输入关键词搜索，注意全是英文"
-          value={iconQuery}
-          onChange={(e) => setIconQuery(e.target.value)}
-          style={{ marginBottom: 12 }}
-        />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 56px)', gap: 16 }}>
-          {iconChoices
-            .filter((it) => it.key.includes(iconQuery.trim().toLowerCase()))
-            .map((it) => (
-              <div
-                key={it.key}
-                onClick={() => {
-                  if (iconPickerTarget === 'add') {
-                    form.setFieldsValue({ icon: it.key });
-                  } else {
-                    editForm.setFieldsValue({ icon: it.key });
-                  }
-                  setIconPickerOpen(false);
-                }}
-                style={{
-                  width: 56,
-                  height: 56,
-                  border: '1px solid #e5e6eb',
-                  borderRadius: 6,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: '#4e5969',
-                }}
-                title={it.key}
-              >
-                {it.icon}
-              </div>
-            ))}
-        </div>
       </Modal>
     </div>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dropdown, Button } from 'antd';
+import { Dropdown } from 'antd';
 import { UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
