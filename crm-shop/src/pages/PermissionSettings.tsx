@@ -293,7 +293,14 @@ const PermissionSettings: React.FC = () => {
         </Form>
 
         <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-start' }}>
-          <Button type="primary" size="small" onClick={() => setOpenAdd(true)}>添加权限项</Button>
+          <Button
+                    type="primary"
+                    size="small"
+                    style={{ height: 30, fontSize: 14, padding: '10px' }}
+                    onClick={() => setOpenAdd(true)}
+                  >
+                    添加权限项
+                  </Button>
         </div>
 
         <div style={{ marginTop: 16 }} className="upload-like-box">
