@@ -208,7 +208,7 @@ const PermissionSettings: React.FC = () => {
             ) : (
               <Popconfirm
                 title="确认删除该权限项？"
-                description={`删除后不可恢复（ID: ${record.id}，名称：${record.name}）。`}
+                description={`删除后不可恢复（名称：${record.name}）。`}
                 okText="删除"
                 cancelText="取消"
                 okButtonProps={{ danger: true }}
