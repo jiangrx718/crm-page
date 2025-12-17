@@ -1,36 +1,50 @@
-import React, { useState } from 'react';
-import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Modal, Radio, Tree } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Card, Form, Input, Button, Table, Empty, Breadcrumb, Modal, Radio, Tree, Spin, message } from 'antd';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 const RoleManagement: React.FC = () => {
-  const [status, setStatus] = useState<string | undefined>();
-  const [keyword, setKeyword] = useState<string>('');
+  // 移除未使用的筛选状态与关键词
   const [openAdd, setOpenAdd] = useState(false);
   const [form] = Form.useForm();
   const [checkedKeys, setCheckedKeys] = useState<any[]>([]);
-  const [expandedKeys, setExpandedKeys] = useState<any[]>(['home','user','user-manage','device-tag','ops-group','gift-member']);
+  const [expandedKeys, setExpandedKeys] = useState<any[]>([]);
   const [autoExpandParent, setAutoExpandParent] = useState(true);
+  const [permLoading, setPermLoading] = useState(false);
+  const [permTreeData, setPermTreeData] = useState<any[]>([]);
 
-  const treeData = [
-    { key: 'home', title: '主页', children: [] },
-    { key: 'user', title: '用户', children: [{ key: 'user-stat', title: '用户统计' }] },
-    { key: 'user-manage', title: '用户管理', children: [
-      { key: 'edit-parent', title: '修改上级推广人' },
-      { key: 'edit-parent-2', title: '修改上级推广人' },
-      { key: 'add-common-admin', title: '新增普通管理员列表' }
-    ] },
-    { key: 'device-tag', title: '设备标签', children: [
-      { key: 'set-unset-tag', title: '设置和取消用户标签' },
-      { key: 'get-user-tag', title: '获取用户标签' }
-    ] },
-    { key: 'ops-group', title: '运营组', children: [
-      { key: 'set-user-group', title: '设置用户分组' },
-      { key: 'user-group-form', title: '用户分组表单' }
-    ] },
-    { key: 'gift-member', title: '赠送会员', children: [
-      { key: 'gift-paid-time', title: '执行赠送付费会员时长' }
-    ] }
-  ];
+  const toTreeNodes = (items: any[]): any[] =>
+    items.map((item) => ({
+      key: item.permission_id,
+      title: item.permission_name,
+      children: Array.isArray(item.child_list) && item.child_list.length ? toTreeNodes(item.child_list) : undefined,
+    }));
+
+  useEffect(() => {
+    if (openAdd) {
+      setPermLoading(true);
+      axios
+        .get(`${API_BASE_URL}/api/permission/list`)
+        .then((res) => {
+          const data = res.data;
+          if (data && data.code === 0 && data.data && Array.isArray(data.data.list)) {
+            const nodes = toTreeNodes(data.data.list);
+            setPermTreeData(nodes);
+            setExpandedKeys(nodes.map((n) => n.key));
+            setAutoExpandParent(false);
+          } else {
+            message.error('获取权限列表失败');
+            setPermTreeData([]);
+          }
+        })
+        .catch(() => {
+          message.error('请求权限列表出错');
+          setPermTreeData([]);
+        })
+        .finally(() => setPermLoading(false));
+    }
+  }, [openAdd]);
 
   const columns = [
     { title: 'ID', dataIndex: 'id' },
@@ -50,32 +64,16 @@ const RoleManagement: React.FC = () => {
           <Breadcrumb.Item>管理权限</Breadcrumb.Item>
           <Breadcrumb.Item>角色管理</Breadcrumb.Item>
         </Breadcrumb>
-        <Form layout="inline" style={{ background: '#f7f8fa', padding: 16, borderRadius: 8 }}>
-          <Form.Item label="状态">
-            <Select
-              style={{ width: 180 }}
-              placeholder="请选择"
-              value={status}
-              onChange={setStatus}
-              options={[{ value: 'enabled', label: '启用' }, { value: 'disabled', label: '禁用' }]}
-              allowClear
-            />
-          </Form.Item>
-          <Form.Item label="身份昵称">
-            <Input
-              style={{ width: 280 }}
-              placeholder="请输入身份昵称"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-            />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary">查询</Button>
-          </Form.Item>
-        </Form>
 
         <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-start' }}>
-          <Button type="primary" size="small" onClick={() => setOpenAdd(true)}>添加角色</Button>
+          <Button
+              type="primary"
+              size="small"
+              style={{ height: 30, fontSize: 14, padding: '10px' }}
+              onClick={() => setOpenAdd(true)}
+            >
+              添加角色
+            </Button>
         </div>
 
         <div style={{ marginTop: 16 }}>
@@ -122,21 +120,23 @@ const RoleManagement: React.FC = () => {
                 if (expandedKeys.length) {
                   setExpandedKeys([]);
                 } else {
-                  setExpandedKeys(treeData.map(n => (n as any).key));
+                  setExpandedKeys(permTreeData.map(n => (n as any).key));
                 }
                 setAutoExpandParent(false);
               }}>折叠</Button>
             </div>
-            <Tree
-              checkable
-              selectable={false}
-              treeData={treeData as any}
-              checkedKeys={checkedKeys}
-              expandedKeys={expandedKeys}
-              autoExpandParent={autoExpandParent}
-              onExpand={(keys) => { setExpandedKeys(keys as any); setAutoExpandParent(false); }}
-              onCheck={(keys) => setCheckedKeys(keys as any)}
-            />
+            <Spin spinning={permLoading}>
+              <Tree
+                checkable
+                selectable={false}
+                treeData={permTreeData as any}
+                checkedKeys={checkedKeys}
+                expandedKeys={expandedKeys}
+                autoExpandParent={autoExpandParent}
+                onExpand={(keys) => { setExpandedKeys(keys as any); setAutoExpandParent(false); }}
+                onCheck={(keys) => setCheckedKeys(keys as any)}
+              />
+            </Spin>
           </Form.Item>
         </Form>
       </Modal>
