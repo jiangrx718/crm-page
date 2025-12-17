@@ -213,7 +213,15 @@ const PermissionSettings: React.FC = () => {
                 cancelText="取消"
                 okButtonProps={{ danger: true }}
                 onConfirm={() => {
-                  setPermissions((prev) => removeById(prev, record.id));
+                  axios.post(`${API_BASE_URL}/api/permission/delete`, {
+                    permission_id: record.permission_id,
+                  }).then(() => {
+                    message.success('权限项删除成功');
+                    setPermissions((prev) => removeById(prev, record.id));
+                  }).catch((error) => {
+                    message.error('删除权限项失败');
+                    console.error(error);
+                  });
                 }}
               >
                 <Button type="link" size="small" danger>删除</Button>
