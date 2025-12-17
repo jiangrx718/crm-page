@@ -40,24 +40,24 @@ function AppLayout() {
         <Layout>
           <Content className="app-content">
             <Routes>
-              <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
-              <Route path="/" element={<PrivateRoute><DataConversion /></PrivateRoute>} />
-              <Route path="/model-training" element={<PrivateRoute><ModelTraining /></PrivateRoute>} />
-              <Route path="/data-inference" element={<PrivateRoute><DataInference /></PrivateRoute>} />
-              <Route path="/fit-model-train-data" element={<PrivateRoute><FitModelTrainData /></PrivateRoute>} />
-              <Route path="/fit-model-train" element={<PrivateRoute><FitModelTrain /></PrivateRoute>} />
-              <Route path="/fit-model-train-data-inference" element={<PrivateRoute><FitModelTrainDataInference /></PrivateRoute>} />
-              <Route path="/roles" element={<PrivateRoute><RoleManagement /></PrivateRoute>} />
-              <Route path="/admins" element={<PrivateRoute><AdminList /></PrivateRoute>} />
-              <Route path="/permissions" element={<PrivateRoute><PermissionSettings /></PrivateRoute>} />
-              <Route path="/product-category" element={<PrivateRoute><ProductCategory /></PrivateRoute>} />
-              <Route path="/product-list" element={<PrivateRoute><ProductList /></PrivateRoute>} />
-              <Route path="/article-category" element={<PrivateRoute><ArticleCategory /></PrivateRoute>} />
-              <Route path="/article-list" element={<PrivateRoute><ArticleList /></PrivateRoute>} />
-              <Route path="/order-list" element={<PrivateRoute><OrderList /></PrivateRoute>} />
-              <Route path="/order-statistics" element={<PrivateRoute><OrderStatistics /></PrivateRoute>} />
-              <Route path="/base-settings" element={<PrivateRoute><BaseSettings /></PrivateRoute>} />
-              <Route path="/agreement-settings" element={<PrivateRoute><AgreementSettings /></PrivateRoute>} />
+              <Route path="/home" element={<Home />} />
+              <Route path="/" element={<DataConversion />} />
+              <Route path="/model-training" element={<ModelTraining />} />
+              <Route path="/data-inference" element={<DataInference />} />
+              <Route path="/fit-model-train-data" element={<FitModelTrainData />} />
+              <Route path="/fit-model-train" element={<FitModelTrain />} />
+              <Route path="/fit-model-train-data-inference" element={<FitModelTrainDataInference />} />
+              <Route path="/roles" element={<RoleManagement />} />
+              <Route path="/admins" element={<AdminList />} />
+              <Route path="/permissions" element={<PermissionSettings />} />
+              <Route path="/product-category" element={<ProductCategory />} />
+              <Route path="/product-list" element={<ProductList />} />
+              <Route path="/article-category" element={<ArticleCategory />} />
+              <Route path="/article-list" element={<ArticleList />} />
+              <Route path="/order-list" element={<OrderList />} />
+              <Route path="/order-statistics" element={<OrderStatistics />} />
+              <Route path="/base-settings" element={<BaseSettings />} />
+              <Route path="/agreement-settings" element={<AgreementSettings />} />
             </Routes>
           </Content>
         </Layout>
@@ -73,8 +73,8 @@ function App() {
         <Routes>
           {/* 独立登录页：不需要登录态授权，也不嵌入主布局 */}
           <Route path="/login" element={<Login />} />
-          {/* 其他业务页面统一走主布局 */}
-          <Route path="/*" element={<AppLayout />} />
+          {/* 其他业务页面统一走主布局（整体受 PrivateRoute 保护，避免闪现） */}
+          <Route path="/*" element={<PrivateRoute><AppLayout /></PrivateRoute>} />
         </Routes>
       </Router>
     </AuthProvider>
