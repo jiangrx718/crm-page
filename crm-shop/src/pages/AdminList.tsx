@@ -189,7 +189,6 @@ const AdminList: React.FC = () => {
                 if (editing) {
                   const body = {
                     admin_id: current?.admin_id,
-                    user_name: values.nickname,
                     password: values.password,
                     department_id: typeof values.role === 'number' ? values.role : (values.role === 'super' ? 1 : values.role === 'ops' ? 2 : values.role === 'viewer' ? 3 : 0),
                     status: values.enabled ? 'on' : 'off'
