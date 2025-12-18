@@ -88,14 +88,10 @@ const Login: React.FC = () => {
         message.success('登录成功');
         navigate('/home');
       } else {
-        const msg = (data && data.msg) || '登录失败';
-        setLoginError(msg);
-        message.error(msg);
+        setLoginError(data?.msg || '登录失败');
       }
     } catch (error) {
-      const msg = '登录失败，请检查用户名和密码';
-      setLoginError(msg);
-      message.error(msg);
+      setLoginError('登录失败，请检查用户名和密码');
     } finally {
       // 每次提交后刷新验证码并清空验证码输入
       try {

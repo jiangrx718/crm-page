@@ -193,13 +193,11 @@ const PermissionSettings: React.FC = () => {
               const res = await axios.post(`${API_BASE_URL}/api/permission/status`, { permission_id: record.permission_id, status }, { headers: { 'Content-Type': 'application/json' } });
               const data = res.data;
               if (!(data && data.code === 0)) {
-                message.error((data && data.msg) || '更新状态失败');
                 setPermissions((prev) => updateById(prev, record.id, (it) => ({ ...it, visible: prevChecked })));
               } else {
                 message.success('操作成功');
               }
             } catch {
-              message.error('请求失败');
               setPermissions((prev) => updateById(prev, record.id, (it) => ({ ...it, visible: prevChecked })));
             }
           }}

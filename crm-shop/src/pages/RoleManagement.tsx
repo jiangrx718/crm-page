@@ -127,11 +127,9 @@ const RoleManagement: React.FC = () => {
               if (data && data.code === 0) {
                 message.success('操作成功');
                 fetchRoleList(page, pageSize);
-              } else {
-                message.error((data && data.msg) || '删除失败');
               }
             } catch {
-              message.error('请求失败');
+              // 错误由全局拦截器处理
             }
           }}
         >
@@ -228,11 +226,9 @@ const RoleManagement: React.FC = () => {
                   form.resetFields();
                   setCheckedKeys([]);
                   fetchRoleList(page, pageSize);
-                } else {
-                  message.error((data && data.msg) || (editing ? '编辑失败' : '新增失败'));
                 }
               } catch {
-                message.error('请求失败');
+                // 错误由全局拦截器处理
               }
             });
           }}>提交</Button>

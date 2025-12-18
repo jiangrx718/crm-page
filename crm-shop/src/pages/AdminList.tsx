@@ -223,11 +223,9 @@ const AdminList: React.FC = () => {
                       setCurrent(null);
                       form.resetFields();
                       fetchAdminList(page, pageSize);
-                    } else {
-                      message.error((data && data.msg) || '编辑失败');
                     }
                   } catch (e) {
-                    message.error('请求失败');
+                    // 错误由全局拦截器处理
                   }
                 } else {
                   const body = {
@@ -245,11 +243,9 @@ const AdminList: React.FC = () => {
                       message.success('操作成功');
                       setOpenAdd(false);
                       fetchAdminList(page, pageSize);
-                    } else {
-                      message.error((data && data.msg) || '新增失败');
                     }
                   } catch (e) {
-                    message.error('请求失败');
+                    // 错误由全局拦截器处理
                   }
                 }
               })

@@ -1,5 +1,7 @@
-import { Layout } from 'antd';
+import { Layout, App as AntdApp } from 'antd';
 import { HashRouter as Router, Route, Routes } from 'react-router-dom'; // 修改这里：BrowserRouter → HashRouter
+import { useEffect } from 'react';
+import { eventBus } from './utils/eventBus';
 import SideMenu from './components/SideMenu';
 import UserMenu from './components/UserMenu';
 import DataConversion from './pages/DataConversion';
@@ -25,6 +27,36 @@ import { AuthProvider } from './contexts/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 
 const { Header, Content, Sider } = Layout;
+
+// 全局错误监听组件，必须在 AntdApp 内部使用
+const GlobalErrorListener = () => {
+  const { modal } = AntdApp.useApp();
+
+  useEffect(() => {
+    const handleGlobalError = (data: any) => {
+      console.log('Handling global error in component:', data);
+      const config = {
+        title: '提示',
+        content: data.content,
+        okText: '知道了',
+        centered: true,
+      };
+      
+      if (data.type === 'warning') {
+        modal.warning(config);
+      } else {
+        modal.error(config);
+      }
+    };
+
+    eventBus.on('global_error', handleGlobalError);
+    return () => {
+      eventBus.off('global_error', handleGlobalError);
+    };
+  }, [modal]);
+
+  return null;
+};
 
 function AppLayout() {
   return (
@@ -68,16 +100,19 @@ function AppLayout() {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          {/* 独立登录页：不需要登录态授权，也不嵌入主布局 */}
-          <Route path="/login" element={<Login />} />
-          {/* 其他业务页面统一走主布局（整体受 PrivateRoute 保护，避免闪现） */}
-          <Route path="/*" element={<PrivateRoute><AppLayout /></PrivateRoute>} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <AntdApp>
+      <GlobalErrorListener />
+      <AuthProvider>
+        <Router>
+          <Routes>
+            {/* 独立登录页：不需要登录态授权，也不嵌入主布局 */}
+            <Route path="/login" element={<Login />} />
+            {/* 其他业务页面统一走主布局（整体受 PrivateRoute 保护，避免闪现） */}
+            <Route path="/*" element={<PrivateRoute><AppLayout /></PrivateRoute>} />
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </AntdApp>
   );
 }
 
