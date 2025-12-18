@@ -207,6 +207,7 @@ const AdminList: React.FC = () => {
                     admin_id: current?.admin_id,
                     password: values.password,
                     role_id: values.role,
+                    department_id: values.role,
                     status: values.enabled ? 'on' : 'off'
                   };
                   try {
@@ -231,6 +232,7 @@ const AdminList: React.FC = () => {
                     user_phone: values.account,
                     password: values.password,
                     role_id: values.role,
+                    department_id: values.role,
                     status: values.enabled ? "on" : "off"
                   };
                   try {
