@@ -165,7 +165,7 @@ const AdminList: React.FC = () => {
             type="primary"
             size="small"
             style={{ height: 30, fontSize: 14, padding: '10px' }}
-            onClick={() => setOpenAdd(true)}
+            onClick={() => { setEditing(false); setCurrent(null); form.resetFields(); setOpenAdd(true); }}
           >
             添加管理员
           </Button>
@@ -241,6 +241,7 @@ const AdminList: React.FC = () => {
                     const data = res.data;
                     if (data && data.code === 0) {
                       message.success('操作成功');
+                      form.resetFields();
                       setOpenAdd(false);
                       fetchAdminList(page, pageSize);
                     }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Form, Input, Button, message, Alert } from 'antd';
+import { Card, Form, Input, Button, message } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,7 +12,6 @@ const Login: React.FC = () => {
   const [form] = Form.useForm();
 
   // 图形验证码（本地生成）
-  const [loginError, setLoginError] = useState('');
   const [captchaText, setCaptchaText] = useState('');
   const [captchaDataUrl, setCaptchaDataUrl] = useState<string>('');
 
@@ -76,8 +75,6 @@ const Login: React.FC = () => {
 
   const onFinish = async (values: any) => {
     try {
-      // 清理旧的错误提示
-      setLoginError('');
       const res = await axios.post(`${API_BASE_URL}/login/do`, {
         user_name: values.account,
         password: values.password
@@ -87,11 +84,8 @@ const Login: React.FC = () => {
         login(data.data.token, values.account);
         message.success('登录成功');
         navigate('/home');
-      } else {
-        setLoginError(data?.msg || '登录失败');
       }
     } catch (error) {
-      setLoginError('登录失败，请检查用户名和密码');
     } finally {
       // 每次提交后刷新验证码并清空验证码输入
       try {
@@ -146,16 +140,6 @@ const Login: React.FC = () => {
               <div style={{ fontSize: 20, fontWeight: 600 }}>CRM商品管理后台系统</div>
             </div>
             <Form form={form} layout="vertical" onFinish={onFinish} requiredMark={false} initialValues={{ account: '' }}>
-              {loginError && (
-                <Alert
-                  style={{ marginBottom: 16 }}
-                  message={loginError}
-                  type="error"
-                  showIcon
-                  closable
-                  onClose={() => setLoginError('')}
-                />
-              )}
               <Form.Item label="账号" name="account" rules={[{ required: true, message: '请输入账号' }]}> 
                 <Input placeholder="" />
               </Form.Item>
