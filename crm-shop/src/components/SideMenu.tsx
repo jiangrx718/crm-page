@@ -25,7 +25,7 @@ const SideMenu: React.FC = () => {
   useEffect(() => {
     const fetchMenu = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/api/permission/list?status=on`);
+        const res = await axios.get(`${API_BASE_URL}/api/permission/list?status=on&menu=1`);
         if (res.data && res.data.code === 0 && res.data.data && Array.isArray(res.data.data.list)) {
           setMenuData(res.data.data.list);
         }
