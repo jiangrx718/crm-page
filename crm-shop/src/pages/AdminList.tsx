@@ -36,9 +36,12 @@ const AdminList: React.FC = () => {
 
   const columns = [
     { title: '管理员ID', dataIndex: 'admin_id' },
-    { title: '管理员昵称', dataIndex: 'user_name' },
     { title: '手机号码', dataIndex: 'user_phone' },
-    { title: '角色ID', dataIndex: 'department_id' },
+    { title: '管理员昵称', dataIndex: 'user_name' },
+    { title: '所属角色', dataIndex: 'department_id', render: (val: string) => {
+      const role = roles.find(r => r.role_id === val);
+      return role ? role.role_name : val;
+    } },
     { title: '状态', dataIndex: 'status', render: (val: string) => (
       <Tag color={val === 'on' ? 'green' : 'red'}>{val === 'on' ? '启用' : '禁用'}</Tag>
     ) },
