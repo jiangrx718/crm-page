@@ -16,7 +16,23 @@ const AdminList: React.FC = () => {
   const [total, setTotal] = useState<number>(0);
   const [editing, setEditing] = useState<boolean>(false);
   const [current, setCurrent] = useState<any | null>(null);
+  const [roles, setRoles] = useState<any[]>([]);
   const hasInitialized = useRef(false);
+
+  useEffect(() => {
+    // Fetch roles for the select dropdown
+    const fetchRoles = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/api/role/list?limit=100&offset=1`);
+        if (res.data && res.data.code === 0 && res.data.data && Array.isArray(res.data.data.list)) {
+          setRoles(res.data.data.list);
+        }
+      } catch (e) {
+        console.error('Failed to fetch roles', e);
+      }
+    };
+    fetchRoles();
+  }, []);
 
   const columns = [
     { title: '管理员ID', dataIndex: 'admin_id' },
@@ -190,7 +206,7 @@ const AdminList: React.FC = () => {
                   const body = {
                     admin_id: current?.admin_id,
                     password: values.password,
-                    department_id: typeof values.role === 'number' ? values.role : (values.role === 'super' ? 1 : values.role === 'ops' ? 2 : values.role === 'viewer' ? 3 : 0),
+                    role_id: values.role,
                     status: values.enabled ? 'on' : 'off'
                   };
                   try {
@@ -214,7 +230,7 @@ const AdminList: React.FC = () => {
                     user_name: values.nickname,
                     user_phone: values.account,
                     password: values.password,
-                    department_id: typeof values.role === 'number' ? values.role : (values.role === 'super' ? 1 : values.role === 'ops' ? 2 : values.role === 'viewer' ? 3 : 0),
+                    role_id: values.role,
                     status: values.enabled ? "on" : "off"
                   };
                   try {
@@ -296,11 +312,10 @@ const AdminList: React.FC = () => {
             <Input.Password placeholder="请确认密码" />
           </Form.Item>
           <Form.Item label="管理员角色" name="role" rules={[{ required: true, message: '请选择管理员角色' }]}> 
-            <Select placeholder="请选择角色" options={[
-              { value: 1, label: '超级管理员' },
-              { value: 2, label: '运营管理员' },
-              { value: 3, label: '只读管理员' }
-            ]} />
+            <Select 
+              placeholder="请选择角色" 
+              options={roles.map(r => ({ label: r.role_name, value: r.role_id }))} 
+            />
           </Form.Item>
           <Form.Item label="状态" name="enabled" initialValue={true}>
             <Radio.Group>
