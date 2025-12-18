@@ -1,280 +1,129 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ExperimentOutlined, DownOutlined, RightOutlined, SafetyOutlined, ShoppingOutlined, SettingOutlined, HomeOutlined, ShoppingCartOutlined, ReadOutlined } from '@ant-design/icons';
+import { ExperimentOutlined, DownOutlined, RightOutlined, SafetyOutlined, ShoppingOutlined, SettingOutlined, HomeOutlined, ShoppingCartOutlined, ReadOutlined, AppstoreOutlined } from '@ant-design/icons';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
+
+interface Permission {
+  permission_id: string;
+  permission_name: string;
+  permission_url: string;
+  parent_id: string;
+  status: string;
+  position: number;
+  created_at: string;
+  child_list: Permission[];
+}
 
 const SideMenu: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
-  const [openTrain, setOpenTrain] = useState(false); // 模型训练：默认收起
-  const [openAdmin, setOpenAdmin] = useState(false); // 管理权限：默认收起
-  const [openGoods, setOpenGoods] = useState(false); // 商品管理：默认收起
-  const [openOrders, setOpenOrders] = useState(false); // 订单管理：默认收起
-  const [openSettings, setOpenSettings] = useState(false); // 系统设置：默认收起
-  const [openContent, setOpenContent] = useState(false); // 内容管理：默认收起
+  const [menuData, setMenuData] = useState<Permission[]>([]);
+  const [openKeys, setOpenKeys] = useState<string[]>([]);
 
-  const subMenuItems = [
-    { key: '/', label: 'AI 模型训练数据' },
-    { key: '/model-training', label: 'AI 模型训练' },
-    { key: '/data-inference', label: 'AI 模型数据推理' },
-    { key: '/fit-model-train-data', label: '机理模型训练数据' },
-    { key: '/fit-model-train', label: '机理模型训练' },
-    { key: '/fit-model-train-data-inference', label: '机理模型数据推理' },
-  ];
+  useEffect(() => {
+    const fetchMenu = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/api/permission/list?status=on`);
+        if (res.data && res.data.code === 0 && res.data.data && Array.isArray(res.data.data.list)) {
+          setMenuData(res.data.data.list);
+        }
+      } catch (e) {
+        console.error('Failed to fetch menu data', e);
+      }
+    };
+    fetchMenu();
+  }, []);
 
-  const adminMenuItems = [
-    { key: '/roles', label: '角色管理' },
-    { key: '/admins', label: '管理员列表' },
-    { key: '/permissions', label: '权限设置' },
-  ];
+  const getIcon = (name: string) => {
+    switch (name) {
+      case '首页': return <HomeOutlined />;
+      case '模型训练': return <ExperimentOutlined />;
+      case '管理权限': return <SafetyOutlined />;
+      case '商品管理': return <ShoppingOutlined />;
+      case '订单管理': return <ShoppingCartOutlined />;
+      case '内容管理': return <ReadOutlined />;
+      case '系统设置': return <SettingOutlined />;
+      default: return <AppstoreOutlined />;
+    }
+  };
 
-  const goodsMenuItems = [
-    { key: '/product-category', label: '商品分类' },
-    { key: '/product-list', label: '商品列表' },
-  ];
+  const isChildActive = (item: Permission): boolean => {
+    if (item.permission_url === currentPath) return true;
+    if (item.child_list && item.child_list.length > 0) {
+      return item.child_list.some(child => child.permission_url === currentPath);
+    }
+    return false;
+  };
 
-  const ordersMenuItems = [
-    { key: '/order-list', label: '订单列表' },
-    { key: '/order-statistics', label: '订单统计' },
-  ];
+  const handleParentClick = (item: Permission) => {
+    // If it has no children, navigate
+    if (!item.child_list || item.child_list.length === 0) {
+      navigate(item.permission_url);
+      // Close all other menus? Not necessarily for leaf nodes like Home.
+      // But maybe we want to close expanded menus if we go to a top level page?
+      // Current behavior doesn't seem to enforce closing when clicking Home, but accordion usually applies to expandable items.
+      return;
+    }
 
-  const settingsMenuItems = [
-    { key: '/base-settings', label: '基础设置' },
-    { key: '/agreement-settings', label: '协议设置' },
-  ];
-
-  const contentMenuItems = [
-    { key: '/article-list', label: '文章列表' },
-    { key: '/article-category', label: '文章分类' },
-  ];
+    // It has children, toggle expand
+    const isOpen = openKeys.includes(item.permission_id);
+    if (isOpen) {
+      setOpenKeys([]);
+    } else {
+      setOpenKeys([item.permission_id]); // Accordion: only one open
+    }
+    
+    // If the parent itself has a valid link (not just a container), navigate?
+    // Usually container nodes have url="/" or similar which is not a page.
+    // The example data has permission_url="/" for containers.
+    if (item.permission_url && item.permission_url !== '/') {
+        navigate(item.permission_url);
+    }
+  };
 
   return (
     <div className="menu-container" style={{ height: '100vh', overflowY: 'auto', overscrollBehavior: 'contain', paddingBottom: 12 }}>
-      {/* 顶部菜单：首页 */}
-      <div
-        className={`menu-item ${currentPath === '/home' ? 'active' : ''}`}
-        onClick={() => navigate('/home')}
-      >
-        <span className="menu-icon"><HomeOutlined /></span>
-        <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>首页</span>
-      </div>
+      {menuData.map(item => {
+        const hasChildren = item.child_list && item.child_list.length > 0;
+        const isOpen = openKeys.includes(item.permission_id);
+        const active = isChildActive(item);
 
-      {/* 父级菜单：模型训练 */}
-      <div
-        className={`menu-item ${currentPath === '/model-training' ? 'active' : ''}`}
-        onClick={() => {
-          const next = !openTrain;
-          setOpenTrain(next);
-          // 手风琴：展开此分组时收起其他分组
-          if (next) {
-            setOpenAdmin(false);
-            setOpenGoods(false);
-            setOpenOrders(false);
-            setOpenSettings(false);
-          }
-          // 点击同时跳转到模型训练页面
-          navigate('/model-training');
-        }}
-      >
-        <span className="menu-icon"><ExperimentOutlined /></span>
-        <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>模型训练</span>
-        <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
-          {openTrain ? <DownOutlined /> : <RightOutlined />}
-        </span>
-      </div>
-
-      {/* 子菜单列表 */}
-      {openTrain && (
-        <div className="submenu-container">
-          {subMenuItems.map(item => (
+        return (
+          <div key={item.permission_id}>
             <div
-              key={item.key}
-              className={`submenu-item ${currentPath === item.key ? 'active' : ''}`}
-              onClick={() => navigate(item.key)}
+              className={`menu-item ${active ? 'active' : ''}`}
+              onClick={() => handleParentClick(item)}
             >
-              <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>{item.label}</span>
+              <span className="menu-icon">{getIcon(item.permission_name)}</span>
+              <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>{item.permission_name}</span>
+              {hasChildren && (
+                <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
+                  {isOpen ? <DownOutlined /> : <RightOutlined />}
+                </span>
+              )}
             </div>
-          ))}
-        </div>
-      )}
 
-      {/* 父级菜单：管理权限 */}
-      <div
-        className={`menu-item ${['/roles','/admins','/permissions'].includes(currentPath) ? 'active' : ''}`}
-        onClick={() => {
-          const next = !openAdmin;
-          setOpenAdmin(next);
-          if (next) {
-            setOpenTrain(false);
-            setOpenGoods(false);
-            setOpenOrders(false);
-            setOpenSettings(false);
-          }
-        }}
-      >
-        <span className="menu-icon"><SafetyOutlined /></span>
-        <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>管理权限</span>
-        <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
-          {openAdmin ? <DownOutlined /> : <RightOutlined />}
-        </span>
-      </div>
-
-      {openAdmin && (
-        <div className="submenu-container">
-          {adminMenuItems.map(item => (
-            <div
-              key={item.key}
-              className={`submenu-item ${currentPath === item.key ? 'active' : ''}`}
-              onClick={() => navigate(item.key)}
-            >
-              <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>{item.label}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* 父级菜单：商品管理 */}
-      <div
-        className={`menu-item ${['/product-category','/product-list'].includes(currentPath) ? 'active' : ''}`}
-        onClick={() => {
-          const next = !openGoods;
-          setOpenGoods(next);
-          if (next) {
-            setOpenTrain(false);
-            setOpenAdmin(false);
-            setOpenOrders(false);
-            setOpenSettings(false);
-          }
-        }}
-      >
-        <span className="menu-icon"><ShoppingOutlined /></span>
-        <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>商品管理</span>
-        <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
-          {openGoods ? <DownOutlined /> : <RightOutlined />}
-        </span>
-      </div>
-
-      {openGoods && (
-        <div className="submenu-container">
-          {goodsMenuItems.map(item => (
-            <div
-              key={item.key}
-              className={`submenu-item ${currentPath === item.key ? 'active' : ''}`}
-              onClick={() => navigate(item.key)}
-            >
-              <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>{item.label}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* 父级菜单：内容管理 */}
-      <div
-        className={`menu-item ${['/article-list','/article-category'].includes(currentPath) ? 'active' : ''}`}
-        onClick={() => {
-          const next = !openContent;
-          setOpenContent(next);
-          if (next) {
-            setOpenTrain(false);
-            setOpenAdmin(false);
-            setOpenGoods(false);
-            setOpenOrders(false);
-            setOpenSettings(false);
-          }
-        }}
-      >
-        <span className="menu-icon"><ReadOutlined /></span>
-        <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>内容管理</span>
-        <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
-          {openContent ? <DownOutlined /> : <RightOutlined />}
-        </span>
-      </div>
-
-      {openContent && (
-        <div className="submenu-container">
-          {contentMenuItems.map(item => (
-            <div
-              key={item.key}
-              className={`submenu-item ${currentPath === item.key ? 'active' : ''}`}
-              onClick={() => navigate(item.key)}
-            >
-              <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>{item.label}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* 父级菜单：订单管理 */}
-      <div
-        className={`menu-item ${['/order-list','/order-statistics'].includes(currentPath) ? 'active' : ''}`}
-        onClick={() => {
-          const next = !openOrders;
-          setOpenOrders(next);
-          if (next) {
-            setOpenTrain(false);
-            setOpenAdmin(false);
-            setOpenGoods(false);
-            setOpenSettings(false);
-          }
-        }}
-      >
-        <span className="menu-icon"><ShoppingCartOutlined /></span>
-        <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>订单管理</span>
-        <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
-          {openOrders ? <DownOutlined /> : <RightOutlined />}
-        </span>
-      </div>
-
-      {openOrders && (
-        <div className="submenu-container">
-          {ordersMenuItems.map(item => (
-            <div
-              key={item.key}
-              className={`submenu-item ${currentPath === item.key ? 'active' : ''}`}
-              onClick={() => navigate(item.key)}
-            >
-              <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>{item.label}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* 父级菜单：系统设置 */}
-      <div
-        className={`menu-item ${['/base-settings','/agreement-settings'].includes(currentPath) ? 'active' : ''}`}
-        onClick={() => {
-          const next = !openSettings;
-          setOpenSettings(next);
-          if (next) {
-            setOpenTrain(false);
-            setOpenAdmin(false);
-            setOpenGoods(false);
-            setOpenOrders(false);
-          }
-        }}
-      >
-        <span className="menu-icon"><SettingOutlined /></span>
-        <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>系统设置</span>
-        <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
-          {openSettings ? <DownOutlined /> : <RightOutlined />}
-        </span>
-      </div>
-
-      {openSettings && (
-        <div className="submenu-container">
-          {settingsMenuItems.map(item => (
-            <div
-              key={item.key}
-              className={`submenu-item ${currentPath === item.key ? 'active' : ''}`}
-              onClick={() => navigate(item.key)}
-            >
-              <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>{item.label}</span>
-            </div>
-          ))}
-        </div>
-      )}
+            {hasChildren && isOpen && (
+              <div className="submenu-container">
+                {item.child_list.map(subItem => (
+                  <div
+                    key={subItem.permission_id}
+                    className={`submenu-item ${currentPath === subItem.permission_url ? 'active' : ''}`}
+                    onClick={() => navigate(subItem.permission_url)}
+                  >
+                    <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>{subItem.permission_name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
+
 
 export default SideMenu;
