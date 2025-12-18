@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ExperimentOutlined, DownOutlined, RightOutlined, SafetyOutlined, ShoppingOutlined, SettingOutlined, HomeOutlined, ShoppingCartOutlined, ReadOutlined, AppstoreOutlined } from '@ant-design/icons';
 import axios from 'axios';
@@ -21,8 +21,12 @@ const SideMenu: React.FC = () => {
   const currentPath = location.pathname;
   const [menuData, setMenuData] = useState<Permission[]>([]);
   const [openKeys, setOpenKeys] = useState<string[]>([]);
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
     const fetchMenu = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/api/permission/list?status=on&menu=1`);
