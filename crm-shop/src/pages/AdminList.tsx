@@ -285,7 +285,26 @@ const AdminList: React.FC = () => {
           <Form.Item label="管理员昵称" name="nickname" rules={[{ required: true, message: '请输入管理员昵称' }]}> 
             <Input placeholder="请输入管理员昵称" disabled={editing} />
           </Form.Item>
-          <Form.Item label="管理员密码" name="password" rules={editing ? [] : [{ required: true, message: '请输入管理员密码' }]}> 
+          <Form.Item
+            label="管理员密码"
+            name="password"
+            rules={
+              editing
+                ? [
+                    {
+                      validator: (_, value) => {
+                        if (!value) return Promise.resolve();
+                        if (String(value).length < 6) return Promise.reject(new Error('密码至少6位'));
+                        return Promise.resolve();
+                      },
+                    },
+                  ]
+                : [
+                    { required: true, message: '请输入管理员密码' },
+                    { min: 6, message: '密码至少6位' },
+                  ]
+            }
+          > 
             <Input.Password placeholder="请输入管理员密码" />
           </Form.Item>
           <Form.Item label="确认密码" name="confirm" dependencies={["password"]} rules={[
