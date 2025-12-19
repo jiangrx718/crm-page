@@ -18,10 +18,13 @@ const AdminList: React.FC = () => {
   const [current, setCurrent] = useState<any | null>(null);
   const [roles, setRoles] = useState<any[]>([]);
   const hasInitialized = useRef(false);
+  const rolesLoaded = useRef(false);
 
   useEffect(() => {
     // Fetch roles for the select dropdown
     const fetchRoles = async () => {
+      if (rolesLoaded.current) return;
+      rolesLoaded.current = true;
       try {
         const res = await axios.get(`${API_BASE_URL}/api/role/list?limit=100&offset=1`);
         if (res.data && res.data.code === 0 && res.data.data && Array.isArray(res.data.data.list)) {
