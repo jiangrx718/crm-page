@@ -41,7 +41,7 @@ const AdminList: React.FC = () => {
     { title: '管理员ID', dataIndex: 'admin_id' },
     { title: '手机号码', dataIndex: 'user_phone' },
     { title: '管理员昵称', dataIndex: 'user_name' },
-    { title: '所属角色', dataIndex: 'department_id', render: (val: string) => {
+    { title: '所属角色', dataIndex: 'role_id', render: (val: string) => {
       const role = roles.find(r => r.role_id === val);
       return role ? role.role_name : val;
     } },
@@ -60,7 +60,7 @@ const AdminList: React.FC = () => {
             password: undefined,
             confirm: undefined,
             nickname: record.user_name,
-            role: record.department_id,
+            role: record.role_id,
             enabled: record.status === 'on'
           });
         }}>编辑</Button>
@@ -213,7 +213,6 @@ const AdminList: React.FC = () => {
                     admin_id: current?.admin_id,
                     password: values.password,
                     role_id: values.role,
-                    department_id: values.role,
                     status: values.enabled ? 'on' : 'off'
                   };
                   try {
@@ -236,7 +235,6 @@ const AdminList: React.FC = () => {
                     user_phone: values.account,
                     password: values.password,
                     role_id: values.role,
-                    department_id: values.role,
                     status: values.enabled ? "on" : "off"
                   };
                   try {
