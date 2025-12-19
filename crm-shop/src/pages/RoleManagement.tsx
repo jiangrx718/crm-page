@@ -97,7 +97,8 @@ const RoleManagement: React.FC = () => {
         <Button
           type="link"
           size="small"
-          style={{ padding: 0, color: '#1677ff' }}
+          style={{ padding: 0, color: record.is_init === 'on' ? '#ccc' : '#1677ff' }}
+          disabled={record.is_init === 'on'}
           onClick={() => {
             setEditing(true);
             setCurrentRole(record);
@@ -116,6 +117,7 @@ const RoleManagement: React.FC = () => {
           description={`确定要删除角色【${record.role_name}】吗？`}
           okText="确定"
           cancelText="取消"
+          disabled={record.is_init === 'on'}
           onConfirm={async () => {
             try {
               const res = await axios.post(
@@ -133,7 +135,15 @@ const RoleManagement: React.FC = () => {
             }
           }}
         >
-          <Button type="link" danger size="small" style={{ padding: 0 }}>删除</Button>
+          <Button 
+            type="link" 
+            danger 
+            size="small" 
+            style={{ padding: 0, color: record.is_init === 'on' ? '#ccc' : undefined }}
+            disabled={record.is_init === 'on'}
+          >
+            删除
+          </Button>
         </Popconfirm>
       </div>
     ) },
