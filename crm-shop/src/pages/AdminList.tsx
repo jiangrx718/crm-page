@@ -69,6 +69,7 @@ const AdminList: React.FC = () => {
           description={`确定要删除${record.user_name}数据吗？`}
           okText="确定"
           cancelText="取消"
+          disabled={record.is_init === 'on'}
           onConfirm={async () => {
             try {
               const res = await axios.post(`${API_BASE_URL}/api/admin/delete`, { admin_id: record.admin_id }, { headers: { 'Content-Type': 'application/json' } });
@@ -84,7 +85,7 @@ const AdminList: React.FC = () => {
             }
           }}
         >
-          <Button type="link" danger size="small" style={{ padding: 0 }}>删除</Button>
+          <Button type="link" danger size="small" style={{ padding: 0 }} disabled={record.is_init === 'on'}>删除</Button>
         </Popconfirm>
       </div>
     ) }
