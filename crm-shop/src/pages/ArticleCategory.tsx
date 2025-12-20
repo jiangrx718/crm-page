@@ -15,6 +15,7 @@ const ArticleCategory: React.FC = () => {
   const [openEdit, setOpenEdit] = useState(false);
   const [editForm] = Form.useForm();
   const [editing, setEditing] = useState<Cat | null>(null);
+  const hasInitialized = React.useRef(false);
 
   const fetchCategories = async () => {
     try {
@@ -39,7 +40,10 @@ const ArticleCategory: React.FC = () => {
   };
 
   React.useEffect(() => {
-    fetchCategories();
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      fetchCategories();
+    }
   }, []);
 
   const filterTree = (items: Cat[]): Cat[] => {
