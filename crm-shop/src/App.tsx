@@ -1,5 +1,5 @@
 import { Layout, App as AntdApp } from 'antd';
-import { HashRouter as Router, Route, Routes } from 'react-router-dom'; // 修改这里：BrowserRouter → HashRouter
+import { HashRouter as Router, Route, Routes, Navigate } from 'react-router-dom'; // 修改这里：BrowserRouter → HashRouter
 import { useEffect } from 'react';
 import { eventBus } from './utils/eventBus';
 import SideMenu from './components/SideMenu';
@@ -66,6 +66,7 @@ function AppLayout() {
         <Layout>
           <Content className="app-content">
             <Routes>
+              <Route path="/" element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<Home />} />
               <Route path="/roles" element={<RoleManagement />} />
               <Route path="/admins" element={<AdminList />} />
@@ -78,6 +79,7 @@ function AppLayout() {
               <Route path="/order-statistics" element={<OrderStatistics />} />
               <Route path="/base-settings" element={<BaseSettings />} />
               <Route path="/agreement-settings" element={<AgreementSettings />} />
+              <Route path="*" element={<Navigate to="/home" replace />} />
             </Routes>
           </Content>
         </Layout>
