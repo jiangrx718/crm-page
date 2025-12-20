@@ -1,5 +1,6 @@
 import React, { useRef, useMemo } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
+import { uploadImageToMinio } from '../utils/upload';
 
 interface RichEditorProps {
   value?: string;
@@ -27,6 +28,17 @@ const RichEditor: React.FC<RichEditorProps> = ({ value, onChange, height = 500 }
       'alignright alignjustify | bullist numlist outdent indent | ' +
       'removeformat | help',
     content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+    images_upload_handler: (blobInfo: any, _progress: any) => new Promise<string>((resolve, reject) => {
+      const blob = blobInfo.blob();
+      const filename = blobInfo.filename();
+      uploadImageToMinio(blob, filename)
+        .then((url) => {
+          resolve(url);
+        })
+        .catch((err) => {
+          reject('Image upload failed: ' + (err.message || err));
+        });
+    }),
   }), [height]);
 
   return (
