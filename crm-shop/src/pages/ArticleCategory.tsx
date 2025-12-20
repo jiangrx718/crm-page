@@ -150,19 +150,36 @@ const ArticleCategory: React.FC = () => {
   };
 
   const onEditOk = async () => {
-    const values = await editForm.validateFields();
-    const file = values.icon?.[0];
-    const iconUrl = file?.url || file?.thumbUrl || editing?.icon || undefined;
-    setData(prev => prev.map(it => (it.id === (editing?.id ?? -1) ? {
-      ...it,
-      parentId: values.parentId,
-      name: values.name,
-      desc: values.desc,
-      icon: iconUrl,
-      sort: values.sort ?? 0,
-      status: values.status,
-    } : it)));
-    onEditCancel();
+    try {
+      const values = await editForm.validateFields();
+      const file = values.icon?.[0];
+      const iconUrl = file?.url || file?.thumbUrl || editing?.icon || '';
+
+      if (!editing?.id) {
+        message.error('编辑失败：无法获取分类ID');
+        return;
+      }
+
+      const payload = {
+        category_id: editing.id,
+        parent_id: values.parentId === 0 ? "" : values.parentId,
+        category_image: iconUrl,
+        position: values.sort ?? 0,
+        category_name: values.name,
+        status: values.status === 'show' ? 'on' : 'off'
+      };
+
+      await axios.post(`${API_BASE_URL}/api/article/category/update`, payload);
+      message.success('分类更新成功');
+
+      fetchCategories();
+      onEditCancel();
+    } catch (error) {
+      console.error(error);
+      if (axios.isAxiosError(error)) {
+        message.error('更新失败: ' + (error.response?.data?.message || error.message));
+      }
+    }
   };
 
   const onAddOk = async () => {
@@ -323,10 +340,6 @@ const ArticleCategory: React.FC = () => {
 
             <Form.Item label="分类名称" name="name" rules={[{ required: true, message: '请输入分类名称' }]}> 
               <Input placeholder="请输入分类名称" />
-            </Form.Item>
-
-            <Form.Item label="分类简介" name="desc" rules={[{ required: true, message: '请输入分类简介' }]}> 
-              <Input.TextArea placeholder="请输入分类简介" rows={3} />
             </Form.Item>
 
             <Form.Item label="分类图片" name="icon" valuePropName="fileList" getValueFromEvent={(e) => e?.fileList}>
