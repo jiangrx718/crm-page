@@ -6,7 +6,7 @@ import { API_BASE_URL } from '../config';
 
 type Cat = { id: string | number; name: string; icon?: string; status: 'show' | 'hide'; desc?: string; sort?: number; parentId?: string | number; children?: Cat[] };
 
-const ArticleCategory: React.FC = () => {
+const ProductCategory: React.FC = () => {
   const [status] = useState<string | undefined>();
   const [keyword] = useState<string>('');
   const [data, setData] = useState<Cat[]>([]);
@@ -18,7 +18,7 @@ const ArticleCategory: React.FC = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/article/category/list`);
+      const res = await axios.get(`${API_BASE_URL}/api/product/category/list`);
       if (res.data.code === 0 && res.data.data && res.data.data.list) {
         const mapApiToCat = (item: any): Cat => ({
           id: item.category_id,
@@ -115,7 +115,7 @@ const ArticleCategory: React.FC = () => {
               cancelText="取消"
               onConfirm={async () => {
                 try {
-                  const res = await axios.post(`${API_BASE_URL}/api/article/category/delete`, { category_id: record.id });
+                  const res = await axios.post(`${API_BASE_URL}/api/product/category/delete`, { category_id: record.id });
                   if (res.data.code === 0) {
                     message.success('已删除当前类别');
                     fetchCategories();
@@ -177,7 +177,7 @@ const ArticleCategory: React.FC = () => {
         status: values.status === 'show' ? 'on' : 'off'
       };
 
-      await axios.post(`${API_BASE_URL}/api/article/category/update`, payload);
+      await axios.post(`${API_BASE_URL}/api/product/category/update`, payload);
       message.success('分类更新成功');
 
       fetchCategories();
@@ -205,7 +205,7 @@ const ArticleCategory: React.FC = () => {
         status: values.status === 'show' ? 'on' : 'off'
       };
 
-      await axios.post(`${API_BASE_URL}/api/article/category/create`, payload);
+      await axios.post(`${API_BASE_URL}/api/product/category/create`, payload);
       message.success('分类添加成功');
 
       // Refresh list to get the real ID and data
@@ -373,4 +373,4 @@ const ArticleCategory: React.FC = () => {
   );
 };
 
-export default ArticleCategory;
+export default ProductCategory;
