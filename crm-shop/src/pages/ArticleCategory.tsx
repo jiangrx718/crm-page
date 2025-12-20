@@ -99,7 +99,27 @@ const ArticleCategory: React.FC = () => {
         checkedChildren="开启"
         unCheckedChildren="关闭"
         checked={record.status === 'show'}
-        onChange={(checked) => setData(prev => updateStatusById(prev, record.id, checked))}
+        onChange={async (checked) => {
+          try {
+            const statusStr = checked ? 'on' : 'off';
+            const res = await axios.post(`${API_BASE_URL}/api/category/status`, { 
+              category_id: record.id, 
+              status: statusStr 
+            });
+            
+            if (res.data.code === 0) {
+              message.success('状态更新成功');
+              setData(prev => updateStatusById(prev, record.id, checked));
+            } else {
+              message.error(res.data.msg || '状态更新失败');
+              // Revert switch if failed
+              setData(prev => [...prev]); 
+            }
+          } catch (error) {
+            console.error(error);
+            message.error('请求失败');
+          }
+        }}
       />
     ) },
     { title: '操作', dataIndex: 'action', width: 200, render: (_: any, record: Cat) => {
