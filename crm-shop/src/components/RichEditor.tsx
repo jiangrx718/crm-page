@@ -9,6 +9,8 @@ interface RichEditorProps {
 
 const RichEditor: React.FC<RichEditorProps> = ({ value, onChange, height = 500 }) => {
   const editorRef = useRef<any>(null);
+  // 使用 useRef 存储初始 value，确保 initialValue 在组件更新时不会变，避免 TinyMCE 重新初始化或重置光标
+  const initialValueRef = useRef(value);
 
   const initConfig = useMemo(() => ({
     language: 'zh_CN',
@@ -38,7 +40,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ value, onChange, height = 500 }
       <Editor
         apiKey="cusr1xg6mls93emhkpuw2cp9kpzd6jlot5vek4wpzx38xotz"
         onInit={(_evt, editor) => editorRef.current = editor}
-        initialValue={value}
+        initialValue={initialValueRef.current}
         onEditorChange={(newValue) => {
           if (onChange) {
             onChange(newValue);

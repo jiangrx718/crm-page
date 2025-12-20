@@ -44,7 +44,6 @@ const ArticleList: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
   const [addOpen, setAddOpen] = useState(false);
   const [addForm] = Form.useForm();
-  const [content, setContent] = useState('');
 
   const filtered = useMemo(() => (
     data.filter(item => {
@@ -76,7 +75,6 @@ const ArticleList: React.FC = () => {
     message.success('已添加文章');
     setAddOpen(false);
     addForm.resetFields();
-    setContent('');
   };
 
   const columns = [
@@ -221,13 +219,7 @@ const ArticleList: React.FC = () => {
 
                 <Divider orientation="center">文章内容</Divider>
                 <Form.Item label="文章内容" name="content" rules={[{ required: true, message: '请输入文章内容' }]}> 
-                  <RichEditor
-                    value={content}
-                    onChange={(newContent: string) => {
-                      setContent(newContent);
-                      addForm.setFieldValue('content', newContent);
-                    }}
-                  />
+                  <RichEditor />
                 </Form.Item>
               </Form>
             </div>
