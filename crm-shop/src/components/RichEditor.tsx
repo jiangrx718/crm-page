@@ -1,5 +1,6 @@
 import React, { useRef, useMemo } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
+import { message } from 'antd';
 import { uploadFileToBackend } from '../utils/upload';
 
 interface RichEditorProps {
@@ -28,14 +29,31 @@ const RichEditor: React.FC<RichEditorProps> = ({ value, onChange, height = 500 }
       'alignright alignjustify | bullist numlist outdent indent | ' +
       'removeformat | help',
     content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
-    images_upload_handler: (blobInfo: any, _progress: any) => new Promise<string>((resolve, reject) => {
+    images_upload_handler: (blobInfo: any, _progress: any) => new Promise<string>((resolve, _reject) => {
       const blob = blobInfo.blob();
       uploadFileToBackend(blob)
         .then((url) => {
           resolve(url);
         })
         .catch((err) => {
-          reject('Image upload failed: ' + (err.message || err));
+          console.error('Image upload failed:', err);
+          message.error('图片上传失败: ' + (err.message || err));
+          
+          // 为了避免 TinyMCE 弹出错误提示框，我们这里必须 resolve。
+          // 策略：resolve 一个特定的“失败标识 URL”，然后利用 setTimeout 在编辑器渲染出这个图片后立即将其删除。
+          // 这样既避开了弹窗，又不会在编辑器里留下垃圾图片。
+          const failId = `upload-failed-${Date.now()}`;
+          
+          // 延迟执行删除操作，等待 TinyMCE 将 resolve 的 URL 插入到 DOM 中
+          setTimeout(() => {
+            if (editorRef.current) {
+              // 查找 src 匹配 failId 的 img 标签并移除
+              const imgs = editorRef.current.dom.select(`img[src="${failId}"]`);
+              editorRef.current.dom.remove(imgs);
+            }
+          }, 100);
+          
+          resolve(failId);
         });
     }),
     file_picker_callback: (callback: any, _value: any, meta: any) => {
@@ -53,8 +71,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ value, onChange, height = 500 }
               })
               .catch((err) => {
                 console.error('Media upload failed:', err);
-                // TinyMCE 的 file_picker_callback 没有标准的错误回调方式，通常只能 alert 或 console
-                alert('Media upload failed: ' + (err.message || err));
+                message.error('多媒体上传失败: ' + (err.message || err));
               });
           }
         };
