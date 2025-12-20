@@ -12,6 +12,12 @@ const RichEditor: React.FC<RichEditorProps> = ({ value, onChange, height = 500 }
 
   return (
     <>
+      <style>{`
+        /* 隐藏 TinyMCE 右上角的 "Explore trial" 推广按钮 */
+        .tox-promotion {
+          display: none !important;
+        }
+      `}</style>
       <Editor
         apiKey="cusr1xg6mls93emhkpuw2cp9kpzd6jlot5vek4wpzx38xotz"
         onInit={(_evt, editor) => editorRef.current = editor}
