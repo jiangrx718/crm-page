@@ -109,14 +109,23 @@ const ArticleCategory: React.FC = () => {
             </Tooltip>
           ) : (
             <Popconfirm
-              title="确认删除当前类别吗？"
-              description={`删除后不可恢复（ID: ${record.id}，名称：${record.name}）。`}
-              okText="删除"
+              title="删除确认"
+              description={`确定要删除${record.name}数据吗？`}
+              okText="确定"
               cancelText="取消"
-              okButtonProps={{ danger: true }}
-              onConfirm={() => {
-                setData(prev => removeCatById(prev, record.id));
-                message.success('已删除当前类别');
+              onConfirm={async () => {
+                try {
+                  const res = await axios.post(`${API_BASE_URL}/api/article/category/delete`, { category_id: record.id });
+                  if (res.data.code === 0) {
+                    message.success('已删除当前类别');
+                    fetchCategories();
+                  } else {
+                    message.error(res.data.msg || '删除失败');
+                  }
+                } catch (error) {
+                  console.error(error);
+                  message.error('删除请求失败');
+                }
               }}
             >
               <Button type="link" danger>删除</Button>
