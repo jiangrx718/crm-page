@@ -1,9 +1,8 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Popconfirm, message, Switch, Divider, Upload } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
-import Quill from 'quill';
-import 'quill/dist/quill.snow.css';
+import RichEditor from '../components/RichEditor';
 
 type Article = {
   id: number;
@@ -46,32 +45,6 @@ const ArticleList: React.FC = () => {
   const [addOpen, setAddOpen] = useState(false);
   const [addForm] = Form.useForm();
   const [content, setContent] = useState('');
-  const quillContainerRef = useRef<HTMLDivElement | null>(null);
-  const quillToolbarRef = useRef<HTMLDivElement | null>(null);
-  const quillRef = useRef<Quill | null>(null);
-  const editorWrapperRef = useRef<HTMLDivElement | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isHtmlMode, setIsHtmlMode] = useState(false);
-  const [htmlSource, setHtmlSource] = useState('');
-  // 全屏自适应高度：记录工具栏高度与视口高度
-  const [toolbarHeight, setToolbarHeight] = useState(48);
-  const [viewportHeight, setViewportHeight] = useState<number>(() => (typeof window !== 'undefined' ? window.innerHeight : 800));
-  // 解决 toolbar handler 闭包状态不更新的问题
-  const isHtmlModeRef = useRef<boolean>(false);
-  const htmlSourceRef = useRef<string>('');
-  useEffect(() => { isHtmlModeRef.current = isHtmlMode; }, [isHtmlMode]);
-  useEffect(() => { htmlSourceRef.current = htmlSource; }, [htmlSource]);
-
-  // 监听窗口变化并测量工具栏高度，用于全屏时动态计算编辑区高度
-  useEffect(() => {
-    const measure = () => {
-      setToolbarHeight(quillToolbarRef.current?.offsetHeight || 48);
-      if (typeof window !== 'undefined') setViewportHeight(window.innerHeight);
-    };
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, [addOpen, isFullscreen, isHtmlMode]);
 
   const filtered = useMemo(() => (
     data.filter(item => {
@@ -106,136 +79,6 @@ const ArticleList: React.FC = () => {
     setContent('');
   };
 
-  // 初始化 Quill 编辑器（进入添加页时）
-  useEffect(() => {
-    if (!addOpen) return;
-    if (!quillContainerRef.current) return;
-
-    // 清理可能残留的工具栏与内容容器
-    const wrapper = quillContainerRef.current.parentElement;
-    wrapper?.querySelectorAll('.ql-toolbar').forEach(el => el.remove());
-    quillContainerRef.current.innerHTML = '';
-
-    // 注册分隔线 Blot（<hr/>）
-    const BlockEmbed: any = (Quill as any).import('blots/block/embed');
-    class DividerBlot extends BlockEmbed { static blotName = 'divider'; static tagName = 'hr'; }
-    (Quill as any).register(DividerBlot);
-
-    quillRef.current = new Quill(quillContainerRef.current, {
-      theme: 'snow',
-      modules: {
-        toolbar: {
-          container: quillToolbarRef.current || '#article-toolbar',
-          handlers: {
-            image: () => {
-              const input = document.createElement('input');
-              input.type = 'file';
-              input.accept = 'image/*';
-              input.onchange = async () => {
-                const file = input.files?.[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = () => {
-                  const range = quillRef.current!.getSelection(true);
-                  quillRef.current!.insertEmbed(range ? range.index : 0, 'image', reader.result as string, 'user');
-                };
-                reader.readAsDataURL(file);
-              };
-              input.click();
-            },
-            video: () => {
-              const url = window.prompt('请输入视频地址（支持外链）');
-              if (url) {
-                const range = quillRef.current!.getSelection(true);
-                quillRef.current!.insertEmbed(range ? range.index : 0, 'video', url, 'user');
-              }
-            },
-            divider: () => {
-              const range = quillRef.current!.getSelection(true);
-              quillRef.current!.insertEmbed(range ? range.index : 0, 'divider', true, 'user');
-            },
-            fullscreen: () => {
-              setIsFullscreen(prev => !prev);
-            },
-            html: () => {
-              const next = !isHtmlModeRef.current;
-              if (next) {
-                const html = quillRef.current!.root.innerHTML;
-                setHtmlSource(html);
-                setIsHtmlMode(true);
-                setContent(html);
-                addForm.setFieldValue('content', html);
-              } else {
-                const html = htmlSourceRef.current || '';
-                quillRef.current!.root.innerHTML = html;
-                setIsHtmlMode(false);
-                setContent(html);
-                addForm.setFieldValue('content', html);
-              }
-            },
-          }
-        },
-      },
-      formats: [
-        'header', 'font', 'size',
-        'bold', 'italic', 'underline', 'strike',
-        'color', 'background', 'script',
-        'blockquote', 'code-block',
-        'list', 'indent',
-        'align', 'link', 'image', 'video', 'divider'
-      ],
-    });
-
-    // 初始内容同步
-    const initHtml = addForm.getFieldValue('content') || content || '';
-    quillRef.current.root.innerHTML = initHtml;
-
-    // 监听文本变化同步到表单
-    quillRef.current.on('text-change', () => {
-      const html = quillRef.current!.root.innerHTML;
-      setContent(html);
-      addForm.setFieldValue('content', html);
-    });
-
-    return () => {
-      if (quillRef.current) {
-        quillRef.current.off('text-change');
-      }
-    };
-  }, [addOpen]);
-
-  // HTML 源码模式时，同步内容到表单
-  useEffect(() => {
-    if (isHtmlMode) {
-      addForm.setFieldValue('content', htmlSource);
-      setContent(htmlSource);
-    }
-  }, [isHtmlMode, htmlSource]);
-
-  // 在源码模式下支持 ESC 快捷键返回富文本
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (isHtmlMode && e.key === 'Escape' && quillRef.current) {
-        quillRef.current.root.innerHTML = htmlSource || '';
-        setIsHtmlMode(false);
-        setContent(htmlSource || '');
-        addForm.setFieldValue('content', htmlSource || '');
-      }
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [isHtmlMode, htmlSource]);
-
-  // 全屏时禁用页面滚动
-  useEffect(() => {
-    if (isFullscreen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [isFullscreen]);
-
   const columns = [
     { title: 'ID', dataIndex: 'id', width: 80 },
     { title: '文章名称', dataIndex: 'title' },
@@ -245,7 +88,7 @@ const ArticleList: React.FC = () => {
         checkedChildren="已发布"
         unCheckedChildren="未发布"
         checked={record.status === 'published'}
-        onChange={(checked) => setData(prev => prev.map(a => a.id === record.id ? { ...a, status: checked ? 'published' : 'draft' } : a))}
+        onChange={(checked) => setData(prev => prev.map(a => a.id === record.id ? { ...a, status: (checked ? 'published' : 'draft') as Article['status'] } : a))}
       />
     ) },
     { title: '浏览量', dataIndex: 'views', width: 100 },
@@ -378,119 +221,13 @@ const ArticleList: React.FC = () => {
 
                 <Divider orientation="center">文章内容</Divider>
                 <Form.Item label="文章内容" name="content" rules={[{ required: true, message: '请输入文章内容' }]}> 
-                  <div ref={editorWrapperRef} style={isFullscreen ? { position: 'fixed', inset: 0, zIndex: 1000, background: '#fff', padding: 16 } : undefined}>
-                    {/* 工具栏：与协议设置页一致，并补充 HTML/分隔线/全屏 */}
-                    <div id="article-toolbar" ref={quillToolbarRef} className="ql-toolbar ql-snow" style={{ border: '1px solid #e5e6eb', borderRadius: 6, borderBottom: 'none', display: 'flex', flexWrap: 'nowrap', alignItems: 'center', gap: 4, overflowX: 'auto', position: 'sticky', top: 0, zIndex: 5, background: '#fff', width: '100%' }}>
-                      <span className="ql-formats">
-                        <button
-                          className="ql-html"
-                          title={isHtmlMode ? '可视化界面' : 'HTML'}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            height: 28,
-                            lineHeight: '28px',
-                            width: 'auto',
-                            minWidth: 44,
-                            padding: '0 10px',
-                            borderRadius: 4,
-                            whiteSpace: 'nowrap',
-                            background: isHtmlMode ? '#efefef' : 'transparent',
-                          }}
-                        >
-                          {isHtmlMode ? '可视化界面' : 'HTML'}
-                        </button>
-                      </span>
-                      <span className="ql-formats">
-                        <select className="ql-header" defaultValue="">
-                          <option value="">正文</option>
-                          <option value="1">标题1</option>
-                          <option value="2">标题2</option>
-                          <option value="3">标题3</option>
-                          <option value="4">标题4</option>
-                          <option value="5">标题5</option>
-                          <option value="6">标题6</option>
-                        </select>
-                        <select className="ql-font" defaultValue="">
-                          <option value="">默认字体</option>
-                          <option value="serif">衬线</option>
-                          <option value="monospace">等宽</option>
-                        </select>
-                        <select className="ql-size" defaultValue="">
-                          <option value="small">小</option>
-                          <option value="">标准</option>
-                          <option value="large">大</option>
-                          <option value="huge">超大</option>
-                        </select>
-                      </span>
-                      <span className="ql-formats">
-                        <button className="ql-bold" title="加粗" />
-                        <button className="ql-italic" title="斜体" />
-                        <button className="ql-underline" title="下划线" />
-                        <button className="ql-strike" title="删除线" />
-                      </span>
-                      <span className="ql-formats">
-                        <select className="ql-color" />
-                        <select className="ql-background" />
-                        <button className="ql-script" value="sub" title="下标" />
-                        <button className="ql-script" value="super" title="上标" />
-                      </span>
-                      <span className="ql-formats">
-                        <button className="ql-blockquote" title="引用" />
-                        <button className="ql-code-block" title="代码块" />
-                      </span>
-                      <span className="ql-formats">
-                        <button className="ql-list" value="ordered" title="有序列表" />
-                        <button className="ql-list" value="bullet" title="无序列表" />
-                        <button className="ql-indent" value="-1" title="减少缩进" />
-                        <button className="ql-indent" value="+1" title="增加缩进" />
-                      </span>
-                      <span className="ql-formats">
-                        <button className="ql-align" value="" title="左对齐" />
-                        <button className="ql-align" value="center" title="居中对齐" />
-                        <button className="ql-align" value="right" title="右对齐" />
-                        <button className="ql-align" value="justify" title="两端对齐" />
-                      </span>
-                      <span className="ql-formats">
-                        <button className="ql-link" title="插入链接" />
-                        <button className="ql-image" title="插入图片" />
-                        <button className="ql-clean" title="清除格式" />
-                        <button className="ql-divider" title="分隔线">
-                          {/* 自定义分隔线图标：一条水平线 */}
-                          <svg viewBox="0 0 18 18" width="18" height="18">
-                            <line x1="3" y1="9" x2="15" y2="9" stroke="currentColor" strokeWidth="1.5"/>
-                          </svg>
-                        </button>
-                        <button className="ql-video" title="插入视频" />
-                        <button className="ql-fullscreen" title="全屏" aria-label="全屏">
-                          {/* 全屏图标：四角扩展 */}
-                          <svg viewBox="0 0 18 18" width="18" height="18">
-                            <path d="M3 7V3h4" fill="none" stroke="currentColor" strokeWidth="1.5"/>
-                            <path d="M15 11v4h-4" fill="none" stroke="currentColor" strokeWidth="1.5"/>
-                            <path d="M7 15H3v-4" fill="none" stroke="currentColor" strokeWidth="1.5"/>
-                            <path d="M11 3h4v4" fill="none" stroke="currentColor" strokeWidth="1.5"/>
-                          </svg>
-                        </button>
-                      </span>
-                    </div>
-                    <div style={{ border: '1px solid #e5e6eb', borderRadius: 6, overflow: 'hidden' }}>
-                      {/* 始终保留 Quill 容器，避免切换模式时卸载导致编辑器失效 */}
-                      <div ref={quillContainerRef} style={{ height: isFullscreen ? Math.max(300, viewportHeight - 32 - toolbarHeight) : 560, display: isHtmlMode ? 'none' : 'block' }} />
-                      {isHtmlMode && (
-                        <textarea
-                          value={htmlSource}
-                          onChange={(e) => setHtmlSource(e.target.value)}
-                          style={{ height: isFullscreen ? Math.max(300, viewportHeight - 32 - toolbarHeight) : 560, width: '100%', fontFamily: 'monospace', fontSize: 12, lineHeight: '20px', border: 'none', outline: 'none', padding: 12 }}
-                        />
-                      )}
-                    </div>
-                    {isFullscreen && (
-                      <div style={{ position: 'fixed', top: 12, right: 16, zIndex: 1001 }}>
-                        <Button onClick={() => setIsFullscreen(false)}>退出全屏</Button>
-                      </div>
-                    )}
-                  </div>
+                  <RichEditor
+                    value={content}
+                    onChange={(newContent: string) => {
+                      setContent(newContent);
+                      addForm.setFieldValue('content', newContent);
+                    }}
+                  />
                 </Form.Item>
               </Form>
             </div>
