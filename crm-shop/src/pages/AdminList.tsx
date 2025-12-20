@@ -21,6 +21,21 @@ const AdminList: React.FC = () => {
   const rolesLoaded = useRef(false);
 
   useEffect(() => {
+    if (openAdd && editing && current) {
+      form.setFieldsValue({
+        account: current.user_phone,
+        password: undefined,
+        confirm: undefined,
+        nickname: current.user_name,
+        role: current.role_id,
+        enabled: current.status === 'on'
+      });
+    } else if (openAdd && !editing) {
+      form.resetFields();
+    }
+  }, [openAdd, editing, current, form]);
+
+  useEffect(() => {
     // Fetch roles for the select dropdown
     const fetchRoles = async () => {
       if (rolesLoaded.current) return;
@@ -60,14 +75,6 @@ const AdminList: React.FC = () => {
           setEditing(true);
           setCurrent(record);
           setOpenAdd(true);
-          form.setFieldsValue({
-            account: record.user_phone,
-            password: undefined,
-            confirm: undefined,
-            nickname: record.user_name,
-            role: record.role_id,
-            enabled: record.status === 'on'
-          });
         }}>编辑</Button>
         <Popconfirm
           title="删除确认"
@@ -138,13 +145,14 @@ const AdminList: React.FC = () => {
   return (
     <div>
       <Card>
-        <Breadcrumb style={{ marginBottom: 20 }}>
-          <Breadcrumb.Item>
-            <Link to="/home">首页</Link>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>管理权限</Breadcrumb.Item>
-          <Breadcrumb.Item>管理员列表</Breadcrumb.Item>
-        </Breadcrumb>
+        <Breadcrumb
+          style={{ marginBottom: 20 }}
+          items={[
+            { title: <Link to="/home">首页</Link> },
+            { title: '管理权限' },
+            { title: '管理员列表' },
+          ]}
+        />
         <Form layout="inline" style={{ background: '#f7f8fa', padding: 16, borderRadius: 8 }}>
           <Form.Item label="状态">
             <Select
@@ -174,7 +182,7 @@ const AdminList: React.FC = () => {
             type="primary"
             size="small"
             style={{ height: 30, fontSize: 14, padding: '10px' }}
-            onClick={() => { setEditing(false); setCurrent(null); form.resetFields(); setOpenAdd(true); }}
+            onClick={() => { setEditing(false); setCurrent(null); setOpenAdd(true); }}
           >
             添加管理员
           </Button>
@@ -207,7 +215,7 @@ const AdminList: React.FC = () => {
         open={openAdd}
         onCancel={() => { setOpenAdd(false); setEditing(false); setCurrent(null); form.resetFields(); }}
         width={800}
-        destroyOnClose
+        destroyOnHidden
         footer={[
           <Button key="cancel" onClick={() => { setOpenAdd(false); setEditing(false); setCurrent(null); form.resetFields(); }}>取消</Button>,
           <Button key="ok" type="primary" onClick={() => {

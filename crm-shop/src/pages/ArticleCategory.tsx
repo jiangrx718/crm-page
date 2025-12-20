@@ -195,13 +195,14 @@ const ArticleCategory: React.FC = () => {
     <div>
       <Card>
         {/* 面包屑导航 */}
-        <Breadcrumb style={{ marginBottom: 20 }}>
-          <Breadcrumb.Item>
-            <Link to="/home">首页</Link>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>内容管理</Breadcrumb.Item>
-          <Breadcrumb.Item>文章分类</Breadcrumb.Item>
-        </Breadcrumb>
+        <Breadcrumb
+          style={{ marginBottom: 20 }}
+          items={[
+            { title: <Link to="/home">首页</Link> },
+            { title: '内容管理' },
+            { title: '文章分类' },
+          ]}
+        />
 
         {/* 顶部筛选栏：与上传图布局一致 */}
         <Form layout="inline" style={{ background: '#f7f8fa', padding: 16, borderRadius: 8 }}>
@@ -255,7 +256,7 @@ const ArticleCategory: React.FC = () => {
           cancelText="取消"
           width={640}
           rootClassName="compact-modal"
-          bodyStyle={{ padding: 12, maxHeight: '60vh', overflow: 'auto' }}
+          styles={{ body: { padding: 12, maxHeight: '60vh', overflow: 'auto' } }}
         >
           <Form
             form={form}
@@ -308,7 +309,7 @@ const ArticleCategory: React.FC = () => {
           cancelText="取消"
           width={640}
           rootClassName="compact-modal"
-          bodyStyle={{ padding: 12, maxHeight: '60vh', overflow: 'auto' }}
+          styles={{ body: { padding: 12, maxHeight: '60vh', overflow: 'auto' } }}
         >
           <Form
             form={editForm}

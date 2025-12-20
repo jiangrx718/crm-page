@@ -329,13 +329,14 @@ const ProductCategory: React.FC = () => {
     <div>
       <Card>
         {/* 面包屑导航 */}
-        <Breadcrumb style={{ marginBottom: 20 }}>
-          <Breadcrumb.Item>
-            <Link to="/home">首页</Link>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>商品管理</Breadcrumb.Item>
-          <Breadcrumb.Item>商品分类</Breadcrumb.Item>
-        </Breadcrumb>
+        <Breadcrumb
+          style={{ marginBottom: 20 }}
+          items={[
+            { title: <Link to="/home">首页</Link> },
+            { title: '商品管理' },
+            { title: '商品分类' },
+          ]}
+        />
 
         <Form layout="inline" style={{ background: '#f7f8fa', padding: 16, borderRadius: 8 }}>
           <Form.Item label="商品分类">
@@ -396,7 +397,7 @@ const ProductCategory: React.FC = () => {
           onCancel={onAddCancel}
           width={640}
           rootClassName="compact-modal"
-          bodyStyle={{ padding: 12, maxHeight: '60vh', overflow: 'auto' }}
+          styles={{ body: { padding: 12, maxHeight: '60vh', overflow: 'auto' } }}
           okText="确定"
           cancelText="取消"
         >
@@ -450,7 +451,7 @@ const ProductCategory: React.FC = () => {
           onCancel={onEditCancel}
           width={640}
           rootClassName="compact-modal"
-          bodyStyle={{ padding: 12, maxHeight: '60vh', overflow: 'auto' }}
+          styles={{ body: { padding: 12, maxHeight: '60vh', overflow: 'auto' } }}
           okText="保存"
           cancelText="取消"
         >

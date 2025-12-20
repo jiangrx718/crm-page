@@ -164,15 +164,20 @@ const PermissionSettings: React.FC = () => {
   const onEdit = (record: Permission) => {
     setEditing(record);
     setShowEdit(true);
-    const parentNode = findByPermissionId(permissions, record.parent_id);
-    editForm.setFieldsValue({
-      name: record.name,
-      type: record.type,
-      sort: record.sort,
-      visible: record.visible,
-      parentId: parentNode ? parentNode.id : undefined,
-    });
   };
+
+  useEffect(() => {
+    if (showEdit && editing) {
+      const parentNode = findByPermissionId(permissions, editing.parent_id);
+      editForm.setFieldsValue({
+        name: editing.name,
+        type: editing.type,
+        sort: editing.sort,
+        visible: editing.visible,
+        parentId: parentNode ? parentNode.id : undefined,
+      });
+    }
+  }, [showEdit, editing, permissions, editForm]);
 
   const columns = [
     { title: '权限名称', dataIndex: 'name', width: 200 },
@@ -305,9 +310,9 @@ const PermissionSettings: React.FC = () => {
         title="添加权限项"
         open={openAdd}
         width={640}
-        destroyOnClose
+        destroyOnHidden
         className="compact-modal"
-        bodyStyle={{ padding: 12, maxHeight: '60vh', overflow: 'auto' }}
+        styles={{ body: { padding: 12, maxHeight: '60vh', overflow: 'auto' } }}
         onCancel={() => setOpenAdd(false)}
         footer={[
           <Button key="cancel" onClick={() => setOpenAdd(false)}>取消</Button>,
@@ -375,9 +380,9 @@ const PermissionSettings: React.FC = () => {
         title="编辑权限项"
         open={showEdit}
         width={640}
-        destroyOnClose
+        destroyOnHidden
         className="compact-modal"
-        bodyStyle={{ padding: 12, maxHeight: '60vh', overflow: 'auto' }}
+        styles={{ body: { padding: 12, maxHeight: '60vh', overflow: 'auto' } }}
         onCancel={() => {
           setShowEdit(false);
           setEditing(null);

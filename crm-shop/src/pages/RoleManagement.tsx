@@ -22,6 +22,17 @@ const RoleManagement: React.FC = () => {
   const [editing, setEditing] = useState(false);
   const [currentRole, setCurrentRole] = useState<any | null>(null);
 
+  useEffect(() => {
+    if (openAdd && editing && currentRole) {
+      form.setFieldsValue({
+        roleName: currentRole.role_name,
+        enabled: currentRole.status === 'on',
+      });
+    } else if (openAdd && !editing) {
+      form.resetFields();
+    }
+  }, [openAdd, editing, currentRole, form]);
+
   const [parentMap, setParentMap] = useState<Record<string, string>>({});
 
   const toTreeNodes = (items: any[], map: Record<string, string>, leaves: Set<string>): any[] =>
@@ -125,10 +136,6 @@ const RoleManagement: React.FC = () => {
             setEditing(true);
             setCurrentRole(record);
             setOpenAdd(true);
-            form.setFieldsValue({
-              roleName: record.role_name,
-              enabled: record.status === 'on',
-            });
             setCheckedKeys(Array.isArray(record.permission) ? record.permission : []);
           }}
         >
@@ -175,13 +182,14 @@ const RoleManagement: React.FC = () => {
     <div>
       <Card>
         {/* 面包屑导航 */}
-        <Breadcrumb style={{ marginBottom: 20 }}>
-          <Breadcrumb.Item>
-            <Link to="/home">首页</Link>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>管理权限</Breadcrumb.Item>
-          <Breadcrumb.Item>角色管理</Breadcrumb.Item>
-        </Breadcrumb>
+        <Breadcrumb
+          style={{ marginBottom: 20 }}
+          items={[
+            { title: <Link to="/home">首页</Link> },
+            { title: '管理权限' },
+            { title: '角色管理' },
+          ]}
+        />
 
         <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-start' }}>
           <Button
@@ -191,7 +199,6 @@ const RoleManagement: React.FC = () => {
               onClick={() => {
                 setEditing(false);
                 setCurrentRole(null);
-                form.resetFields();
                 setCheckedKeys([]);
                 setOpenAdd(true);
               }}
@@ -223,9 +230,9 @@ const RoleManagement: React.FC = () => {
         title={editing ? '修改角色' : '添加角色'}
         open={openAdd}
         width={720}
-        destroyOnClose
+        destroyOnHidden
         className="compact-modal"
-        bodyStyle={{ padding: 12 }}
+        styles={{ body: { padding: 12 } }}
         onCancel={() => {
           setOpenAdd(false);
           setEditing(false);

@@ -110,13 +110,14 @@ const ArticleList: React.FC = () => {
   return (
     <div>
       <Card>
-        <Breadcrumb style={{ marginBottom: 20 }}>
-          <Breadcrumb.Item>
-            <Link to="/home">首页</Link>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>内容管理</Breadcrumb.Item>
-          <Breadcrumb.Item>文章列表</Breadcrumb.Item>
-        </Breadcrumb>
+        <Breadcrumb
+          style={{ marginBottom: 20 }}
+          items={[
+            { title: <Link to="/home">首页</Link> },
+            { title: '内容管理' },
+            { title: '文章列表' },
+          ]}
+        />
 
         {/* 列表视图 / 添加视图 切换渲染在红框区域 */}
         {!addOpen ? (

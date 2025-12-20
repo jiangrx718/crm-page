@@ -21,13 +21,14 @@ const ProductList: React.FC = () => {
     <div>
       <Card>
         {/* 面包屑导航 */}
-        <Breadcrumb style={{ marginBottom: 20 }}>
-          <Breadcrumb.Item>
-            <Link to="/home">首页</Link>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>商品管理</Breadcrumb.Item>
-          <Breadcrumb.Item>商品列表</Breadcrumb.Item>
-        </Breadcrumb>
+        <Breadcrumb
+          style={{ marginBottom: 20 }}
+          items={[
+            { title: <Link to="/home">首页</Link> },
+            { title: '商品管理' },
+            { title: '商品列表' },
+          ]}
+        />
         <Form layout="inline" style={{ background: '#f7f8fa', padding: 16, borderRadius: 8 }}>
           <Form.Item label="商品分类">
             <Select

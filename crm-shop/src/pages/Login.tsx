@@ -123,7 +123,7 @@ const Login: React.FC = () => {
       <div className="login-bg" style={{ position: 'absolute', inset: 0 }} />
 
       {/* 登录卡片：左右布局，右侧表单符合 Ant Design 风格 */}
-      <Card style={{ width: 780, borderRadius: 12, overflow: 'hidden', padding: 0 }} bodyStyle={{ padding: 0 }}>
+      <Card style={{ width: 780, borderRadius: 12, overflow: 'hidden', padding: 0 }} styles={{ body: { padding: 0 } }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
           {/* 左侧品牌/插图 */}
           <div style={{ background: 'linear-gradient(180deg, #e6f4ff 0%, #f7fbff 100%)', padding: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
