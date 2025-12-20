@@ -17,6 +17,14 @@ const UserMenu: React.FC = () => {
     return null;
   }
 
+  // 如果用户名是手机号（11位数字），则脱敏展示
+  const displayUsername = (name: string) => {
+    if (name && /^\d{11}$/.test(name)) {
+      return name.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+    }
+    return name;
+  };
+
   const items = [
     {
       key: 'logout',
@@ -48,7 +56,7 @@ const UserMenu: React.FC = () => {
         }}
       >
         <UserOutlined style={{ color: '#fff', fontSize: 14 }} />
-        <span style={{ color: '#fff', fontSize: 14, fontWeight: 500 }}>{username}</span>
+        <span style={{ color: '#fff', fontSize: 14, fontWeight: 500 }}>{displayUsername(username)}</span>
       </div>
     </Dropdown>
   );

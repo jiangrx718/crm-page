@@ -39,7 +39,12 @@ const AdminList: React.FC = () => {
 
   const columns = [
     { title: '管理员ID', dataIndex: 'admin_id' },
-    { title: '手机号码', dataIndex: 'user_phone' },
+    { title: '手机号码', dataIndex: 'user_phone', render: (val: string) => {
+      if (val && val.length === 11) {
+        return val.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+      }
+      return val;
+    } },
     { title: '管理员昵称', dataIndex: 'user_name' },
     { title: '所属角色', dataIndex: 'role_id', render: (val: string) => {
       const role = roles.find(r => r.role_id === val);
