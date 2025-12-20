@@ -19,7 +19,7 @@ const ArticleCategory: React.FC = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/article/category/list`);
+      const res = await axios.get(`${API_BASE_URL}/api/category/list?category_type=1`);
       if (res.data.code === 0 && res.data.data && res.data.data.list) {
         const mapApiToCat = (item: any): Cat => ({
           id: item.category_id,
@@ -119,7 +119,7 @@ const ArticleCategory: React.FC = () => {
               cancelText="取消"
               onConfirm={async () => {
                 try {
-                  const res = await axios.post(`${API_BASE_URL}/api/article/category/delete`, { category_id: record.id });
+                  const res = await axios.post(`${API_BASE_URL}/api/category/delete`, { category_id: record.id });
                   if (res.data.code === 0) {
                     message.success('已删除当前类别');
                     fetchCategories();
@@ -179,10 +179,11 @@ const ArticleCategory: React.FC = () => {
         category_image: iconUrl,
         position: values.sort ?? 0,
         category_name: values.name,
+        category_type:1,
         status: values.status === 'show' ? 'on' : 'off'
       };
 
-      await axios.post(`${API_BASE_URL}/api/article/category/update`, payload);
+      await axios.post(`${API_BASE_URL}/api/category/update`, payload);
       message.success('分类更新成功');
 
       fetchCategories();
@@ -207,10 +208,11 @@ const ArticleCategory: React.FC = () => {
         category_image: iconUrl,
         position: values.sort ?? 0,
         category_name: values.name,
+        category_type:1,
         status: values.status === 'show' ? 'on' : 'off'
       };
 
-      await axios.post(`${API_BASE_URL}/api/article/category/create`, payload);
+      await axios.post(`${API_BASE_URL}/api/category/create`, payload);
       message.success('分类添加成功');
 
       // Refresh list to get the real ID and data
