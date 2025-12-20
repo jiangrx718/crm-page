@@ -1,147 +1,69 @@
-import React, { useMemo, useState } from 'react';
-import { Card, Form, Select, Input, Button, Table, Empty, Image, Breadcrumb, Switch, Modal, Radio, InputNumber, Upload, Popconfirm, Tooltip } from 'antd';
+import React, { useState } from 'react';
+import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Switch, Modal, InputNumber, Upload, Radio, Popconfirm, message, Tooltip } from 'antd';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
-const ProductCategory: React.FC = () => {
-  const [categoryId, setCategoryId] = useState<string | undefined>();
-  const [status, setStatus] = useState<string | undefined>();
-  const [keyword, setKeyword] = useState<string>('');
-  const [showAdd, setShowAdd] = useState(false);
-  const [addForm] = Form.useForm();
-  const [showEdit, setShowEdit] = useState(false);
+type Cat = { id: string | number; name: string; icon?: string; status: 'show' | 'hide'; desc?: string; sort?: number; parentId?: string | number; children?: Cat[] };
+
+const ArticleCategory: React.FC = () => {
+  const [status] = useState<string | undefined>();
+  const [keyword] = useState<string>('');
+  const [data, setData] = useState<Cat[]>([]);
+  const [openAdd, setOpenAdd] = useState(false);
+  const [form] = Form.useForm();
+  const [openEdit, setOpenEdit] = useState(false);
   const [editForm] = Form.useForm();
   const [editing, setEditing] = useState<Cat | null>(null);
 
-  type Cat = {
-    id: number;
-    name: string;
-    icon?: string;
-    sort: number;
-    status: 'enabled' | 'disabled';
-    children?: Cat[];
+  const fetchCategories = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/article/category/list`);
+      if (res.data.code === 0 && res.data.data && res.data.data.list) {
+        const mapApiToCat = (item: any): Cat => ({
+          id: item.category_id,
+          name: item.category_name,
+          icon: item.category_image,
+          status: item.status === 'on' ? 'show' : 'hide',
+          desc: '',
+          sort: item.position,
+          parentId: item.parent_id || 0,
+          children: item.child_list ? item.child_list.map(mapApiToCat) : [],
+        });
+        setData(res.data.data.list.map(mapApiToCat));
+      }
+    } catch (e) {
+      console.error('Failed to fetch categories', e);
+      message.error('获取分类列表失败');
+    }
   };
 
-  const initialMockData: Cat[] = [
-    {
-      id: 7,
-      name: '生活家居',
-      icon: 'https://via.placeholder.com/32?text=家',
-      sort: 999,
-      status: 'enabled',
-      children: [
-        { id: 701, name: '收纳整理', icon: 'https://via.placeholder.com/32?text=收', sort: 30, status: 'enabled' },
-        { id: 702, name: '床上用品', icon: 'https://via.placeholder.com/32?text=床', sort: 20, status: 'enabled', children: [
-          { id: 70201, name: '被子', icon: 'https://via.placeholder.com/32?text=被', sort: 10, status: 'enabled' },
-          { id: 70202, name: '枕头', icon: 'https://via.placeholder.com/32?text=枕', sort: 9, status: 'disabled' }
-        ]},
-      ]
-    },
-    {
-      id: 53,
-      name: '运动专区',
-      icon: 'https://via.placeholder.com/32?text=运',
-      sort: 995,
-      status: 'enabled',
-      children: [
-        { id: 5301, name: '跑步', icon: 'https://via.placeholder.com/32?text=跑', sort: 12, status: 'enabled' },
-        { id: 5302, name: '健身', icon: 'https://via.placeholder.com/32?text=健', sort: 11, status: 'enabled' },
-        { id: 5303, name: '户外运动', icon: 'https://via.placeholder.com/32?text=外', sort: 10, status: 'disabled' },
-        { id: 5304, name: '球类运动', icon: 'https://via.placeholder.com/32?text=球', sort: 8, status: 'enabled' }
-      ]
-    },
-    {
-      id: 8,
-      name: '电子产品',
-      icon: 'https://via.placeholder.com/32?text=电',
-      sort: 17,
-      status: 'enabled',
-      children: [
-        { id: 801, name: '手机', icon: 'https://via.placeholder.com/32?text=机', sort: 10, status: 'enabled' },
-        { id: 802, name: '电脑', icon: 'https://via.placeholder.com/32?text=脑', sort: 9, status: 'enabled' },
-        { id: 803, name: '智能穿戴', icon: 'https://via.placeholder.com/32?text=戴', sort: 8, status: 'disabled' },
-      ]
-    },
-    {
-      id: 1,
-      name: '家用电器',
-      icon: 'https://via.placeholder.com/32?text=器',
-      sort: 9,
-      status: 'enabled',
-      children: [
-        { id: 101, name: '冰箱', icon: 'https://via.placeholder.com/32?text=冰', sort: 10, status: 'enabled' },
-        { id: 102, name: '洗衣机', icon: 'https://via.placeholder.com/32?text=洗', sort: 9, status: 'enabled' },
-        { id: 103, name: '空调', icon: 'https://via.placeholder.com/32?text=调', sort: 8, status: 'disabled' },
-      ]
-    },
-    {
-      id: 3,
-      name: '家具装饰',
-      icon: 'https://via.placeholder.com/32?text=装',
-      sort: 7,
-      status: 'enabled',
-      children: [
-        { id: 301, name: '沙发', icon: 'https://via.placeholder.com/32?text=沙', sort: 10, status: 'enabled' },
-        { id: 302, name: '餐桌', icon: 'https://via.placeholder.com/32?text=桌', sort: 9, status: 'enabled' },
-        { id: 303, name: '灯具', icon: 'https://via.placeholder.com/32?text=灯', sort: 8, status: 'disabled' },
-      ]
-    },
-    {
-      id: 6,
-      name: '美妆护肤',
-      icon: 'https://via.placeholder.com/32?text=妆',
-      sort: 6,
-      status: 'enabled',
-      children: [
-        { id: 601, name: '面膜', icon: 'https://via.placeholder.com/32?text=膜', sort: 10, status: 'enabled' },
-        { id: 602, name: '护肤乳', icon: 'https://via.placeholder.com/32?text=乳', sort: 9, status: 'enabled' },
-        { id: 603, name: '口红', icon: 'https://via.placeholder.com/32?text=红', sort: 8, status: 'disabled' },
-      ]
-    },
-    {
-      id: 4,
-      name: '居家餐厨',
-      icon: 'https://via.placeholder.com/32?text=厨',
-      sort: 6,
-      status: 'enabled',
-      children: [
-        { id: 401, name: '锅具', icon: 'https://via.placeholder.com/32?text=锅', sort: 10, status: 'enabled' },
-        { id: 402, name: '餐具', icon: 'https://via.placeholder.com/32?text=餐', sort: 9, status: 'enabled' },
-        { id: 403, name: '刀具', icon: 'https://via.placeholder.com/32?text=刀', sort: 8, status: 'disabled' },
-      ]
-    },
-    {
-      id: 2,
-      name: '电视影音',
-      icon: 'https://via.placeholder.com/32?text=视',
-      sort: 3,
-      status: 'enabled',
-      children: [
-        { id: 201, name: '电视机', icon: 'https://via.placeholder.com/32?text=TV', sort: 10, status: 'enabled' },
-        { id: 202, name: '音响', icon: 'https://via.placeholder.com/32?text=音', sort: 9, status: 'enabled' },
-        { id: 203, name: '投影', icon: 'https://via.placeholder.com/32?text=影', sort: 8, status: 'disabled' },
-      ]
-    },
-    {
-      id: 9,
-      name: '日用文创',
-      icon: 'https://via.placeholder.com/32?text=文',
-      sort: 1,
-      status: 'enabled',
-      children: [
-        { id: 901, name: '文具', icon: 'https://via.placeholder.com/32?text=具', sort: 10, status: 'enabled' },
-        { id: 902, name: '礼品', icon: 'https://via.placeholder.com/32?text=礼', sort: 9, status: 'enabled' },
-        { id: 903, name: '创意摆件', icon: 'https://via.placeholder.com/32?text=件', sort: 8, status: 'disabled' },
-      ]
-    },
-  ];
+  React.useEffect(() => {
+    fetchCategories();
+  }, []);
 
-  const [baseData, setBaseData] = useState<Cat[]>(initialMockData);
+  const filterTree = (items: Cat[]): Cat[] => {
+    const matchItem = (it: Cat) => {
+      const byStatus = status ? (status === 'show' ? it.status === 'show' : it.status === 'hide') : true;
+      const byKeyword = keyword ? it.name.includes(keyword) : true;
+      return byStatus && byKeyword;
+    };
+    const next: Cat[] = [];
+    items.forEach((it) => {
+      const child = it.children ? filterTree(it.children) : [];
+      if (matchItem(it) || child.length) {
+        next.push({ ...it, children: child });
+      }
+    });
+    return next;
+  };
+  const filtered = filterTree(data);
 
-  const updateStatusById = (items: Cat[], id: number, enabled: boolean): Cat[] =>
+  const updateStatusById = (items: Cat[], id: string | number, enabled: boolean): Cat[] =>
     items.map((item) => {
       const updated: Cat = {
         ...item,
-        status: item.id === id ? (enabled ? 'enabled' : 'disabled') : item.status,
+        status: item.id === id ? (enabled ? 'show' : 'hide') : item.status,
       };
       if (item.children && item.children.length) {
         updated.children = updateStatusById(item.children, id, enabled);
@@ -149,154 +71,31 @@ const ProductCategory: React.FC = () => {
       return updated;
     });
 
-  const handleStatusChange = (id: number, checked: boolean) => {
-    setBaseData((prev) => updateStatusById(prev, id, checked));
-  };
-
-  const dataSource = useMemo(() => {
-    const filterByKeyword = (items: Cat[]): Cat[] =>
-      items
-        .filter((item) => (status ? item.status === status : true))
-        .filter((item) => (keyword ? item.name.includes(keyword) : true))
-        .map((item) => ({
-          ...item,
-          children: item.children ? filterByKeyword(item.children) : undefined,
-        }));
-
-    const filtered = filterByKeyword(baseData);
-    if (!categoryId) return filtered;
-    // 简单根据顶级分类ID过滤。
-    return filtered.filter((item) => String(item.id) === String(categoryId));
-  }, [categoryId, status, keyword, baseData]);
-
-  const categoryOptions = useMemo(() => baseData.map((c) => ({ value: String(c.id), label: c.name })), [baseData]);
-
-  const flatMaxId = (items: Cat[]): number => {
-    let maxId = 0;
-    const walk = (list: Cat[]) => {
-      list.forEach((it) => {
-        if (it.id > maxId) maxId = it.id;
-        if (it.children && it.children.length) walk(it.children);
-      });
-    };
-    walk(items);
-    return maxId;
-  };
-
-  const onAddCancel = () => {
-    setShowAdd(false);
-    addForm.resetFields();
-  };
-
-  const onAddOk = async () => {
-    const values = await addForm.validateFields();
-    const nextId = flatMaxId(baseData) + 1;
-    const newItem: Cat = {
-      id: nextId,
-      name: values.name,
-      icon: values.icon?.[0]?.url || 'https://via.placeholder.com/32?text=新',
-      sort: values.sort ?? 0,
-      status: values.status === 'show' ? 'enabled' : 'disabled',
-    };
-
-    const pid = Number(values.parentId || 0);
-    setBaseData((prev) => {
-      if (pid === 0) {
-        return [...prev, newItem];
-      }
-      return prev.map((cat) => {
-        if (cat.id === pid) {
-          return { ...cat, children: [...(cat.children || []), newItem] };
-        }
-        return cat;
-      });
-    });
-    onAddCancel();
-  };
-
-  const containsId = (list: Cat[] | undefined, id: number): boolean => {
-    if (!list) return false;
-    for (const it of list) {
-      if (it.id === id) return true;
-      if (containsId(it.children, id)) return true;
-    }
-    return false;
-  };
-
-  const findTopParentId = (id: number): number => {
-    for (const root of baseData) {
-      if (root.id === id) return 0;
-      if (containsId(root.children, id)) return root.id;
-    }
-    return 0;
-  };
-
-  const toFileList = (url?: string) => (url ? [{ uid: '1', url, status: 'done', name: 'image' }] : []);
-
-  const onEdit = (record: Cat) => {
-    setEditing(record);
-    editForm.setFieldsValue({
-      parentId: findTopParentId(record.id),
-      name: record.name,
-      icon: toFileList(record.icon),
-      banner: [],
-      sort: record.sort,
-      status: record.status === 'enabled' ? 'show' : 'hide',
-    });
-    setShowEdit(true);
-  };
-
-  const onEditCancel = () => {
-    setShowEdit(false);
-    editForm.resetFields();
-    setEditing(null);
-  };
-
-  const updateCatById = (items: Cat[], id: number, updater: (c: Cat) => Cat): Cat[] =>
-    items.map((it) => {
-      let next = it.id === id ? updater(it) : it;
-      if (it.children && it.children.length) {
-        next = { ...next, children: updateCatById(it.children, id, updater) } as Cat;
-      }
-      return next;
-    });
-
-  const removeCatById = (items: Cat[], id: number): Cat[] =>
-    items
+  const removeCatById = (list: Cat[], id: string | number): Cat[] =>
+    list
       .filter((it) => it.id !== id)
-      .map((it) => ({
-        ...it,
-        children: it.children ? removeCatById(it.children, id) : it.children,
-      }));
-  // 删除逻辑通过操作列的 Popconfirm 直接调用 removeCatById，无需独立函数。
+      .map((it) => ({ ...it, children: it.children ? removeCatById(it.children, id) : undefined }));
 
-  const onEditOk = async () => {
-    if (!editing) return;
-    const values = await editForm.validateFields();
-    const nextIcon = values.icon?.[0]?.url || editing.icon;
-    setBaseData((prev) =>
-      updateCatById(prev, editing.id, (c) => ({
-        ...c,
-        name: values.name,
-        icon: nextIcon,
-        sort: values.sort ?? c.sort,
-        status: values.status === 'show' ? 'enabled' : 'disabled',
-      }))
-    );
-    onEditCancel();
+  const insertCatToParent = (list: Cat[], pid: string | number, item: Cat): Cat[] => {
+    if (pid === 0 || pid === "") return [...list, item];
+    return list.map((it) => {
+      if (it.id === pid) {
+        return { ...it, children: [...(it.children || []), item] };
+      }
+      return { ...it, children: it.children ? insertCatToParent(it.children, pid, item) : it.children };
+    });
   };
 
   const columns = [
-    { title: 'ID', dataIndex: 'id', width: 100 },
-    { title: '分类名称', dataIndex: 'name' },
-    { title: '分类图标', dataIndex: 'icon', render: (src: string) => src ? <Image src={src} width={32} height={32} /> : '-' },
+    { title: '栏目名称', dataIndex: 'name'},
+    { title: '栏目ID', dataIndex: 'id'},
     { title: '排序', dataIndex: 'sort', width: 100 },
     { title: '状态', dataIndex: 'status', width: 120, render: (_: any, record: Cat) => (
       <Switch
         checkedChildren="开启"
         unCheckedChildren="关闭"
-        checked={record.status === 'enabled'}
-        onChange={(checked) => handleStatusChange(record.id, checked)}
+        checked={record.status === 'show'}
+        onChange={(checked) => setData(prev => updateStatusById(prev, record.id, checked))}
       />
     ) },
     { title: '操作', dataIndex: 'action', width: 200, render: (_: any, record: Cat) => {
@@ -310,20 +109,116 @@ const ProductCategory: React.FC = () => {
             </Tooltip>
           ) : (
             <Popconfirm
-              title="确认删除该分类？"
-              description={`删除后不可恢复（ID: ${record.id}，名称：${record.name}）。`}
-              okText="删除"
+              title="删除确认"
+              description={`确定要删除${record.name}数据吗？`}
+              okText="确定"
               cancelText="取消"
-              okButtonProps={{ danger: true }}
-              onConfirm={() => setBaseData((prev) => removeCatById(prev, record.id))}
+              onConfirm={async () => {
+                try {
+                  const res = await axios.post(`${API_BASE_URL}/api/article/category/delete`, { category_id: record.id });
+                  if (res.data.code === 0) {
+                    message.success('已删除当前类别');
+                    fetchCategories();
+                  } else {
+                    message.error(res.data.msg || '删除失败');
+                  }
+                } catch (error) {
+                  console.error(error);
+                  message.error('删除请求失败');
+                }
+              }}
             >
               <Button type="link" danger>删除</Button>
             </Popconfirm>
           )}
         </div>
       );
-    } }
+    } },
   ];
+
+  const toFileList = (url?: string) => (url ? [{ uid: '1', url, status: 'done', name: 'image' }] : []);
+
+  const onEdit = (record: Cat) => {
+    setEditing(record);
+    editForm.setFieldsValue({
+      parentId: record.parentId ?? 0,
+      name: record.name,
+      desc: record.desc,
+      icon: toFileList(record.icon),
+      sort: record.sort ?? 0,
+      status: record.status,
+    });
+    setOpenEdit(true);
+  };
+
+  const onEditCancel = () => {
+    setOpenEdit(false);
+    editForm.resetFields();
+    setEditing(null);
+  };
+
+  const onEditOk = async () => {
+    try {
+      const values = await editForm.validateFields();
+      const file = values.icon?.[0];
+      const iconUrl = file?.url || file?.thumbUrl || editing?.icon || '';
+
+      if (!editing?.id) {
+        message.error('编辑失败：无法获取分类ID');
+        return;
+      }
+
+      const payload = {
+        category_id: editing.id,
+        parent_id: values.parentId === 0 ? "" : values.parentId,
+        category_image: iconUrl,
+        position: values.sort ?? 0,
+        category_name: values.name,
+        status: values.status === 'show' ? 'on' : 'off'
+      };
+
+      await axios.post(`${API_BASE_URL}/api/article/category/update`, payload);
+      message.success('分类更新成功');
+
+      fetchCategories();
+      onEditCancel();
+    } catch (error) {
+      console.error(error);
+      if (axios.isAxiosError(error)) {
+        message.error('更新失败: ' + (error.response?.data?.message || error.message));
+      }
+    }
+  };
+
+  const onAddOk = async () => {
+    try {
+      const values = await form.validateFields();
+      
+      const file = values.icon?.[0];
+      const iconUrl = file?.url || file?.thumbUrl || '';
+
+      const payload = {
+        parent_id: values.parentId === 0 ? "" : values.parentId,
+        category_image: iconUrl,
+        position: values.sort ?? 0,
+        category_name: values.name,
+        status: values.status === 'show' ? 'on' : 'off'
+      };
+
+      await axios.post(`${API_BASE_URL}/api/article/category/create`, payload);
+      message.success('分类添加成功');
+
+      // Refresh list to get the real ID and data
+      fetchCategories();
+      form.resetFields();
+      setOpenAdd(false);
+    } catch (error) {
+      console.error(error);
+      if (axios.isAxiosError(error)) {
+        message.error('添加失败: ' + (error.response?.data?.message || error.message));
+      }
+    }
+  };
 
   return (
     <div>
@@ -338,168 +233,144 @@ const ProductCategory: React.FC = () => {
           ]}
         />
 
-        <Form layout="inline" style={{ background: '#f7f8fa', padding: 16, borderRadius: 8 }}>
-          <Form.Item label="商品分类">
-            <Select
-              style={{ width: 220 }}
-              placeholder="请选择"
-              value={categoryId}
-              onChange={setCategoryId}
-              options={categoryOptions}
-              allowClear
-            />
-          </Form.Item>
-          <Form.Item label="分类状态">
-            <Select
-              style={{ width: 180 }}
-              placeholder="请选择"
-              value={status}
-              onChange={setStatus}
-              options={[{ value: 'enabled', label: '启用' }, { value: 'disabled', label: '禁用' }]}
-              allowClear
-            />
-          </Form.Item>
-          <Form.Item label="分类名称">
-            <Input
-              style={{ width: 280 }}
-              placeholder="请输入分类名称"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-            />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary">查询</Button>
-          </Form.Item>
-        </Form>
-
         <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-start' }}>
-          <Button type="primary" size="small" onClick={() => setShowAdd(true)}>添加分类</Button>
-        </div>
+            <Button
+                      type="primary"
+                      size="small"
+                      style={{ height: 30, fontSize: 14, padding: '10px' }}
+                      onClick={() => setOpenAdd(true)}
+                    >
+                      添加商品分类
+                    </Button>
+            </div>
 
         <div style={{ marginTop: 16 }}>
           <Table
             columns={columns}
-            dataSource={dataSource}
+            dataSource={filtered}
             pagination={false}
             locale={{ emptyText: <Empty description="暂无数据" /> }}
             rowKey="id"
             expandable={{
               indentSize: 20,
               rowExpandable: (record: Cat) => Array.isArray(record.children) && record.children.length > 0,
+              expandIcon: ({ expanded, onExpand, record }) => {
+                if (!record.children || record.children.length === 0) {
+                  return <span style={{ display: 'inline-block', width: 20, marginRight: 8 }}></span>;
+                }
+                return (
+                  <span
+                    style={{ marginRight: 8, cursor: 'pointer' }}
+                    onClick={e => onExpand(record, e)}
+                  >
+                    {expanded ? '▼' : '▶'}
+                  </span>
+                );
+              }
             }}
           />
         </div>
 
         <Modal
           title="添加分类"
-          open={showAdd}
+          open={openAdd}
           onOk={onAddOk}
-          onCancel={onAddCancel}
+          onCancel={() => { setOpenAdd(false); form.resetFields(); }}
+          okText="确定"
+          cancelText="取消"
           width={640}
           rootClassName="compact-modal"
           styles={{ body: { padding: 12, maxHeight: '60vh', overflow: 'auto' } }}
-          okText="确定"
-          cancelText="取消"
         >
-          <div className="upload-like-box">
-            <Form
-              form={addForm}
-              layout="horizontal"
-              labelCol={{ span: 6 }}
-              wrapperCol={{ span: 18 }}
-              requiredMark={true}
-              initialValues={{ parentId: 0, status: 'show', sort: 0 }}
-            >
-              <Form.Item label="上级分类" name="parentId">
-                <Select style={{ width: 240 }} options={[{ value: 0, label: '顶级分类' }, ...categoryOptions]} />
-              </Form.Item>
+          <Form
+            form={form}
+            layout="horizontal"
+            labelCol={{ span: 4 }}
+            wrapperCol={{ span: 20 }}
+            requiredMark={true}
+            initialValues={{ parentId: 0, status: 'show', sort: 0 }}
+          >
+            <Form.Item label="上级分类" name="parentId">
+              <Select
+                style={{ width: 240 }}
+                options={[{ value: 0, label: '顶级分类' }, ...data.map(it => ({ value: it.id, label: it.name }))]}
+              />
+            </Form.Item>
 
-              <Form.Item label="分类名称" name="name" rules={[{ required: true, message: '请输入分类名称' }]}>
-                <Input placeholder="请输入分类名称" />
-              </Form.Item>
+            <Form.Item label="分类名称" name="name" rules={[{ required: true, message: '请输入分类名称' }]}> 
+              <Input placeholder="请输入分类名称" />
+            </Form.Item>
 
-              <Form.Item label="分类图标 (180*180)" name="icon" valuePropName="fileList" getValueFromEvent={(e) => e?.fileList}>
-                <Upload listType="picture-card" beforeUpload={() => false}>
-                  +
-                </Upload>
-              </Form.Item>
+            <Form.Item label="分类图片" name="icon" valuePropName="fileList" getValueFromEvent={(e) => e?.fileList}>
+              <Upload listType="picture-card" beforeUpload={() => false}>
+                +
+              </Upload>
+            </Form.Item>
 
-              <Form.Item label="分类大图 (468*340)" name="banner" valuePropName="fileList" getValueFromEvent={(e) => e?.fileList}>
-                <Upload listType="picture-card" beforeUpload={() => false}>
-                  +
-                </Upload>
-              </Form.Item>
+            <Form.Item label="排序" name="sort">
+              <InputNumber min={0} style={{ width: 160 }} />
+            </Form.Item>
 
-              <Form.Item label="排序" name="sort">
-                <InputNumber min={0} style={{ width: 160 }} />
-              </Form.Item>
-
-              <Form.Item label="状态" name="status">
-                <Radio.Group>
-                  <Radio value="show">显示</Radio>
-                  <Radio value="hide">隐藏</Radio>
-                </Radio.Group>
-              </Form.Item>
-            </Form>
-          </div>
+            <Form.Item label="状态" name="status">
+              <Radio.Group>
+                <Radio value="show">显示</Radio>
+                <Radio value="hide">隐藏</Radio>
+              </Radio.Group>
+            </Form.Item>
+          </Form>
         </Modal>
 
         <Modal
           title="编辑分类"
-          open={showEdit}
+          open={openEdit}
           onOk={onEditOk}
           onCancel={onEditCancel}
+          okText="保存"
+          cancelText="取消"
           width={640}
           rootClassName="compact-modal"
           styles={{ body: { padding: 12, maxHeight: '60vh', overflow: 'auto' } }}
-          okText="保存"
-          cancelText="取消"
         >
-          <div className="upload-like-box">
-            <Form
-              form={editForm}
-              layout="horizontal"
-              labelCol={{ span: 6 }}
-              wrapperCol={{ span: 18 }}
-              requiredMark={true}
-              initialValues={{ parentId: 0, status: 'show', sort: 0 }}
-            >
-              <Form.Item label="上级分类" name="parentId">
-                <Select style={{ width: 240 }} options={[{ value: 0, label: '顶级分类' }, ...categoryOptions]} />
-              </Form.Item>
+          <Form
+            form={editForm}
+            layout="horizontal"
+            labelCol={{ span: 4 }}
+            wrapperCol={{ span: 20 }}
+            requiredMark={true}
+            initialValues={{ parentId: 0, status: 'show', sort: 0 }}
+          >
+            <Form.Item label="上级分类" name="parentId">
+              <Select
+                style={{ width: 240 }}
+                options={[{ value: 0, label: '顶级分类' }, ...data.map(it => ({ value: it.id, label: it.name }))]}
+              />
+            </Form.Item>
 
-              <Form.Item label="分类名称" name="name" rules={[{ required: true, message: '请输入分类名称' }]}>
-                <Input placeholder="请输入分类名称" />
-              </Form.Item>
+            <Form.Item label="分类名称" name="name" rules={[{ required: true, message: '请输入分类名称' }]}> 
+              <Input placeholder="请输入分类名称" />
+            </Form.Item>
 
-              <Form.Item label="分类图标 (180*180)" name="icon" valuePropName="fileList" getValueFromEvent={(e) => e?.fileList}>
-                <Upload listType="picture-card" beforeUpload={() => false}>
-                  +
-                </Upload>
-              </Form.Item>
+            <Form.Item label="分类图片" name="icon" valuePropName="fileList" getValueFromEvent={(e) => e?.fileList}>
+              <Upload listType="picture-card" beforeUpload={() => false}>
+                +
+              </Upload>
+            </Form.Item>
 
-              <Form.Item label="分类大图 (468*340)" name="banner" valuePropName="fileList" getValueFromEvent={(e) => e?.fileList}>
-                <Upload listType="picture-card" beforeUpload={() => false}>
-                  +
-                </Upload>
-              </Form.Item>
+            <Form.Item label="排序" name="sort">
+              <InputNumber min={0} style={{ width: 160 }} />
+            </Form.Item>
 
-              <Form.Item label="排序" name="sort">
-                <InputNumber min={0} style={{ width: 160 }} />
-              </Form.Item>
-
-              <Form.Item label="状态" name="status">
-                <Radio.Group>
-                  <Radio value="show">显示</Radio>
-                  <Radio value="hide">隐藏</Radio>
-                </Radio.Group>
-              </Form.Item>
-            </Form>
-          </div>
+            <Form.Item label="状态" name="status">
+              <Radio.Group>
+                <Radio value="show">显示</Radio>
+                <Radio value="hide">隐藏</Radio>
+              </Radio.Group>
+            </Form.Item>
+          </Form>
         </Modal>
       </Card>
     </div>
   );
 };
 
-export default ProductCategory;
+export default ArticleCategory;
