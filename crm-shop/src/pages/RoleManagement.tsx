@@ -22,12 +22,24 @@ const RoleManagement: React.FC = () => {
   const [editing, setEditing] = useState(false);
   const [currentRole, setCurrentRole] = useState<any | null>(null);
 
-  const toTreeNodes = (items: any[]): any[] =>
-    items.map((item) => ({
-      key: item.permission_id,
-      title: item.permission_name,
-      children: Array.isArray(item.child_list) && item.child_list.length ? toTreeNodes(item.child_list) : undefined,
-    }));
+  const [parentMap, setParentMap] = useState<Record<string, string>>({});
+
+  const toTreeNodes = (items: any[], map: Record<string, string>, leaves: Set<string>): any[] =>
+    items.map((item) => {
+      const hasChildren = item.child_list && item.child_list.length > 0;
+      if (hasChildren) {
+        item.child_list.forEach((child: any) => {
+          map[child.permission_id] = item.permission_id;
+        });
+      } else {
+        leaves.add(item.permission_id);
+      }
+      return {
+        key: item.permission_id,
+        title: item.permission_name,
+        children: hasChildren ? toTreeNodes(item.child_list, map, leaves) : undefined,
+      };
+    });
 
   useEffect(() => {
     if (openAdd) {
@@ -37,10 +49,20 @@ const RoleManagement: React.FC = () => {
         .then((res) => {
           const data = res.data;
           if (data && data.code === 0 && data.data && Array.isArray(data.data.list)) {
-            const nodes = toTreeNodes(data.data.list);
+            const map: Record<string, string> = {};
+            const leaves = new Set<string>();
+            const nodes = toTreeNodes(data.data.list, map, leaves);
             setPermTreeData(nodes);
+            setParentMap(map);
             setExpandedKeys(nodes.map((n) => n.key));
             setAutoExpandParent(false);
+            if (editing && currentRole) {
+              // 过滤出叶子节点用于 UI 显示，Antd Tree 会自动计算父节点状态
+              const uiKeys = (currentRole.permission || []).filter((key: string) => leaves.has(key));
+              setCheckedKeys(uiKeys);
+            } else {
+              setCheckedKeys([]);
+            }
           } else {
             message.error('获取权限列表失败');
             setPermTreeData([]);
@@ -215,10 +237,24 @@ const RoleManagement: React.FC = () => {
           <Button key="cancel" onClick={() => setOpenAdd(false)}>取消</Button>,
           <Button key="ok" type="primary" onClick={() => {
             form.validateFields().then(async (vals) => {
+              // 提交前，根据 parentMap 补充所有父节点 ID
+              const currentKeys = new Set<any>(Array.isArray(checkedKeys) ? checkedKeys : []);
+              const keysToCheck = [...currentKeys];
+              keysToCheck.forEach(key => {
+                let current = key;
+                while (parentMap[current]) {
+                  const parentId = parentMap[current];
+                  if (!currentKeys.has(parentId)) {
+                    currentKeys.add(parentId);
+                  }
+                  current = parentId;
+                }
+              });
+
               const payload = {
                 role_name: vals.roleName,
                 status: vals.enabled ? 'on' : 'off',
-                permission: Array.isArray(checkedKeys) ? checkedKeys : [],
+                permission: Array.from(currentKeys),
               };
               try {
                 let res;
