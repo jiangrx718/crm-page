@@ -15,9 +15,9 @@ const Home: React.FC = () => {
 
   return (
     <div className="page-container">
-      <Card style={{ marginTop: 16 }}>
+      <Card>
         <div style={{
-          minHeight: '50vh',
+          minHeight: 'calc(100vh - 200px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
