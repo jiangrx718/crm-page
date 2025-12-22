@@ -4,6 +4,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import RichEditor from '../components/RichEditor';
 import axios from 'axios';
+import dayjs from 'dayjs';
 import { API_BASE_URL } from '../config';
 
 type Article = {
@@ -28,6 +29,7 @@ const ArticleList: React.FC = () => {
   const [addForm] = Form.useForm();
   const [categoryOptions, setCategoryOptions] = useState<{ label: string, value: string }[]>([]);
   const [isScheduled, setIsScheduled] = useState(false);
+  const [editId, setEditId] = useState<string | undefined>(undefined);
   const hasInitialized = React.useRef(false);
 
   const fetchCategoryMap = async () => {
@@ -122,28 +124,77 @@ const ArticleList: React.FC = () => {
     }
   };
 
+  const handleEdit = async (record: Article) => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/article/detail`, { params: { article_id: record.id } });
+      const data = res.data;
+      if (data && data.code === 0 && data.data) {
+        const d = data.data;
+        setEditId(record.id);
+        setAddOpen(true);
+        setIsScheduled(!!d.publish_time);
+        addForm.setFieldsValue({
+          title: d.article_name,
+          category: String(d.category_id),
+          content: d.article_content,
+          status: d.status,
+          is_scheduled: !!d.publish_time,
+          publish_time: d.publish_time ? dayjs(d.publish_time) : undefined,
+          position: d.position || 0,
+          cover: d.article_image ? [{
+            uid: '-1',
+            name: 'image.png',
+            status: 'done',
+            url: d.article_image,
+          }] : []
+        });
+      } else {
+        message.error((data && data.msg) || '获取详情失败');
+      }
+    } catch (e) {
+      message.error('请求失败');
+    }
+  };
+
   const onAddOk = async () => {
     try {
       const values = await addForm.validateFields();
-      const params = {
+      const params: any = {
         category_id: values.category,
         article_name: values.title,
         article_image: values.cover?.[0]?.url || (values.cover?.[0]?.response?.data?.url) || '',
-        position: 0,
+        position: Number(values.position) || 0,
         status: values.status,
         article_content: values.content,
         publish_time: values.is_scheduled && values.publish_time ? values.publish_time.format('YYYY-MM-DD HH:mm:ss') : ''
       };
 
-      const res = await axios.post(`${API_BASE_URL}/api/article/create`, params);
+      let res;
+      if (editId) {
+        params.article_id = editId;
+        res = await axios.post(`${API_BASE_URL}/api/article/update`, params);
+      } else {
+        res = await axios.post(`${API_BASE_URL}/api/article/create`, params);
+      }
+
       if (res.data.code === 0) {
-        message.success('已添加文章');
+        message.success(editId ? '已保存文章' : '已添加文章');
         setAddOpen(false);
         addForm.resetFields();
         setIsScheduled(false);
-        fetchArticleList(1, pageSize);
+        setEditId(undefined);
+        fetchArticleList(page, pageSize); // Keep current page if editing? usually go to first page or refresh. user didn't specify. I'll stick to current page logic if possible but usually adding goes to 1. editing stays.
+        // Line 144 was fetchArticleList(1, pageSize);
+        // I should probably keep page for edit, reset to 1 for add.
+        // But for simplicity, I'll follow existing pattern or improve it.
+        // If edit, page is page. If add, 1.
+        if (editId) {
+            fetchArticleList(page, pageSize);
+        } else {
+            fetchArticleList(1, pageSize);
+        }
       } else {
-        message.error(res.data.msg || '添加失败');
+        message.error(res.data.msg || (editId ? '保存失败' : '添加失败'));
       }
     } catch (e) {
       // form validation error or api error
@@ -192,7 +243,7 @@ const ArticleList: React.FC = () => {
     { title: '创建时间', dataIndex: 'time', width: 180 },
     { title: '操作', dataIndex: 'action', width: 200, render: (_: any, record: Article) => (
       <div style={{ display: 'flex', gap: 8 }}>
-        <Button type="link">编辑</Button>
+        <Button type="link" onClick={() => handleEdit(record)}>编辑</Button>
         <Popconfirm
           title="删除确认"
           description={`确定要删除${record.title}数据吗？`}
@@ -246,7 +297,12 @@ const ArticleList: React.FC = () => {
             </Form>
 
             <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-start' }}>
-              <Button type="primary" size="small" onClick={() => setAddOpen(true)}>添加文章</Button>
+              <Button type="primary" size="small" onClick={() => {
+                setEditId(undefined);
+                addForm.resetFields();
+                setIsScheduled(false);
+                setAddOpen(true);
+              }}>添加文章</Button>
             </div>
 
             <div style={{ marginTop: 16 }}>
@@ -272,9 +328,9 @@ const ArticleList: React.FC = () => {
           <div style={{ marginTop: 8 }}>
             {/* 顶部操作栏 */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <div style={{ fontWeight: 600 }}>添加文章</div>
+              <div style={{ fontWeight: 600 }}>{editId ? '编辑文章' : '添加文章'}</div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <Button onClick={() => { setAddOpen(false); addForm.resetFields(); setIsScheduled(false); }}>取消</Button>
+                <Button onClick={() => { setAddOpen(false); addForm.resetFields(); setIsScheduled(false); setEditId(undefined); }}>取消</Button>
                 <Button type="primary" onClick={onAddOk}>保存</Button>
               </div>
             </div>
@@ -284,13 +340,21 @@ const ArticleList: React.FC = () => {
               <Form
                 form={addForm}
                 layout="vertical"
-                initialValues={{ title: '', category: undefined, content: '', status: 'on', is_scheduled: false }}
+                initialValues={{ title: '', category: undefined, content: '', status: 'on', is_scheduled: false, position: 0 }}
+                onValuesChange={(changedValues) => {
+                  if (changedValues.is_scheduled !== undefined) {
+                    setIsScheduled(changedValues.is_scheduled);
+                  }
+                }}
               >
                 <Form.Item label="标题" name="title" rules={[{ required: true, message: '请输入标题' }]}> 
                   <Input placeholder="请输入" maxLength={80} showCount />
                 </Form.Item>
                 <Form.Item label="文章分类" name="category" rules={[{ required: true, message: '请选择分类' }]}> 
                   <Select placeholder="请选择" options={categoryOptions} />
+                </Form.Item>
+                <Form.Item label="排序" name="position">
+                  <Input type="number" placeholder="请输入排序值" />
                 </Form.Item>
                 <Form.Item 
                   label={(
@@ -323,8 +387,8 @@ const ArticleList: React.FC = () => {
                     <Radio value="off">禁用</Radio>
                   </Radio.Group>
                 </Form.Item>
-                <Form.Item label="定时发布" name="is_scheduled">
-                  <Switch checked={isScheduled} onChange={setIsScheduled} />
+                <Form.Item label="定时发布" name="is_scheduled" valuePropName="checked">
+                  <Switch />
                 </Form.Item>
                 {isScheduled && (
                   <Form.Item label="发布时间" name="publish_time" rules={[{ required: true, message: '请选择发布时间' }]}>
