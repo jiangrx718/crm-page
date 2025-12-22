@@ -131,7 +131,23 @@ const ArticleList: React.FC = () => {
         checkedChildren="启用"
         unCheckedChildren="禁用"
         checked={record.status === 'on'}
-        onChange={(checked) => updateArticleStatusLocal(record.id, checked)}
+        onChange={async (checked) => {
+          try {
+            const res = await axios.post(`${API_BASE_URL}/api/article/status`, {
+              article_id: record.id,
+              status: checked ? 'on' : 'off'
+            });
+            const data = res.data;
+            if (data && data.code === 0) {
+              message.success('状态更新成功');
+              updateArticleStatusLocal(record.id, checked);
+            } else {
+              message.error((data && data.msg) || '状态更新失败');
+            }
+          } catch (e) {
+            message.error('请求失败');
+          }
+        }}
       />
     ) },
     { title: '创建时间', dataIndex: 'time', width: 180 },
