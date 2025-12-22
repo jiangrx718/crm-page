@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Popconfirm, message, Switch, Divider, Upload, Tooltip } from 'antd';
+import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Popconfirm, message, Switch, Divider, Upload, Tooltip, Radio, DatePicker } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import RichEditor from '../components/RichEditor';
@@ -27,6 +27,7 @@ const ArticleList: React.FC = () => {
   const [addOpen, setAddOpen] = useState(false);
   const [addForm] = Form.useForm();
   const [categoryOptions, setCategoryOptions] = useState<{ label: string, value: string }[]>([]);
+  const [isScheduled, setIsScheduled] = useState(false);
   const hasInitialized = React.useRef(false);
 
   const fetchCategoryMap = async () => {
@@ -258,7 +259,7 @@ const ArticleList: React.FC = () => {
               <Form
                 form={addForm}
                 layout="vertical"
-                initialValues={{ title: '', category: undefined, content: '' }}
+                initialValues={{ title: '', category: undefined, content: '', status: 'on', is_scheduled: false }}
               >
                 <Form.Item label="标题" name="title" rules={[{ required: true, message: '请输入标题' }]}> 
                   <Input placeholder="请输入" maxLength={80} showCount />
@@ -291,6 +292,20 @@ const ArticleList: React.FC = () => {
                 <Form.Item label="文章内容" name="content" rules={[{ required: true, message: '请输入文章内容' }]}> 
                   <RichEditor />
                 </Form.Item>
+                <Form.Item label="状态" name="status">
+                  <Radio.Group>
+                    <Radio value="on">启用</Radio>
+                    <Radio value="off">禁用</Radio>
+                  </Radio.Group>
+                </Form.Item>
+                <Form.Item label="定时发布" name="is_scheduled">
+                  <Switch checked={isScheduled} onChange={setIsScheduled} />
+                </Form.Item>
+                {isScheduled && (
+                  <Form.Item label="发布时间" name="publish_time" rules={[{ required: true, message: '请选择发布时间' }]}>
+                    <DatePicker showTime format="YYYY-MM-DD HH:mm:ss" placeholder="请选择发布时间" />
+                  </Form.Item>
+                )}
               </Form>
             </div>
           </div>
