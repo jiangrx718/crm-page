@@ -1,105 +1,149 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Popconfirm, message, Switch, Divider, Upload } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import RichEditor from '../components/RichEditor';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 type Article = {
-  id: number;
+  id: string;
   title: string;
-  category: string;
-  views: number;
-  time: string; // YYYY-MM-DD HH:mm
-  status: 'published' | 'draft';
+  categoryId: string;
+  categoryName: string;
+  time: string;
+  status: 'on' | 'off';
 };
-
-const categories = ['品牌资讯', '生活家居', '潮流文化', '🎧分类'];
-
-const initialData: Article[] = Array.from({ length: 36 }, (_, i) => {
-  const id = 237 + i;
-  const cat = categories[i % categories.length];
-  const titlePool = [
-    '电影评谈 “618” 回归｜破圈新风尚',
-    '联博观察｜考究美学迈向文化潮新时代',
-    '鉴宇｜国内外KOL，初创团队评审会吵',
-    '把温柔的日子放在盘里',
-    '街头艺术周刊｜跨界装置展精选',
-    '球鞋文化速递｜热门联名一览',
-  ];
-  return {
-    id,
-    title: titlePool[i % titlePool.length],
-    category: cat,
-    views: 200 + (i * 7) % 1300,
-    time: `2025-04-${String(1 + (i % 9)).padStart(2, '0')} 16:${String(20 + (i % 40)).padStart(2, '0')}`,
-    status: i % 3 === 0 ? 'draft' : 'published',
-  };
-});
 
 const ArticleList: React.FC = () => {
   const [category, setCategory] = useState<string | undefined>();
   const [keyword, setKeyword] = useState<string>('');
-  const [data, setData] = useState<Article[]>(initialData);
+  const [list, setList] = useState<Article[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [addForm] = Form.useForm();
+  const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
+  const hasInitialized = React.useRef(false);
 
-  const filtered = useMemo(() => (
-    data.filter(item => {
-      const byCat = category ? item.category === category : true;
-      const byKw = keyword ? item.title.includes(keyword) : true;
-      return byCat && byKw;
-    })
-  ), [data, category, keyword]);
-
-  const paged = useMemo(() => (
-    filtered.slice((page - 1) * pageSize, page * pageSize)
-  ), [filtered, page, pageSize]);
-
-  const removeById = (id: number) => {
-    setData(prev => prev.filter(a => a.id !== id));
-    message.success('已删除文章');
+  const fetchCategoryMap = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/category/list`, { params: { category_type: 1 } });
+      const data = res.data;
+      if (data && data.code === 0 && data.data && Array.isArray(data.data.list)) {
+        const map: Record<string, string> = {};
+        data.data.list.forEach((item: any) => {
+          const cid = String(item.category_id ?? '');
+          const cname = String(item.category_name ?? '');
+          if (cid) map[cid] = cname;
+        });
+        setCategoryMap(map);
+      }
+    } catch (e) {
+      // ignore
+    }
   };
 
-  const pad = (n: number) => String(n).padStart(2, '0');
+  const fetchArticleList = async (p: number = 1, ps: number = 10) => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_BASE_URL}/api/article/list`, { params: { limit: ps, offset: p } });
+      const data = res.data;
+      if (data && data.code === 0 && data.data) {
+        const arr = Array.isArray(data.data.list) ? data.data.list : [];
+        const cnt = typeof data.data.count === 'number' ? data.data.count : 0;
+        const rows: Article[] = arr.map((it: any) => ({
+          id: String(it.article_id ?? ''),
+          title: String(it.article_name ?? ''),
+          categoryId: String(it.category_id ?? ''),
+          categoryName: categoryMap[String(it.category_id ?? '')] ?? String(it.category_id ?? ''),
+          time: String(it.created_at ?? ''),
+          status: it.status === 'on' ? 'on' : 'off',
+        }));
+        setList(rows);
+        setTotal(cnt);
+        setPage(p);
+        setPageSize(ps);
+      } else {
+        setList([]);
+        setTotal(0);
+      }
+    } catch (e) {
+      setList([]);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      fetchCategoryMap().finally(() => {
+        fetchArticleList(1, 10);
+      });
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (Object.keys(categoryMap).length > 0) {
+      setList(prev => prev.map(it => ({
+        ...it,
+        categoryName: categoryMap[it.categoryId] ?? it.categoryId
+      })));
+    }
+  }, [categoryMap]);
+
+  const updateArticleStatusLocal = (id: string, checked: boolean) => {
+    setList(prev => prev.map(a => a.id === id ? { ...a, status: checked ? 'on' : 'off' } : a));
+  };
+
+  const deleteArticle = async (id: string) => {
+    try {
+      const res = await axios.post(`${API_BASE_URL}/api/article/delete`, { article_id: id });
+      const data = res.data;
+      if (data && data.code === 0) {
+        message.success('操作成功');
+        fetchArticleList(page, pageSize);
+      } else {
+        message.error((data && data.msg) || '删除失败');
+      }
+    } catch (e) {
+      message.error('请求失败');
+    }
+  };
+
   const onAddOk = async () => {
-    const values = await addForm.validateFields();
-    const now = new Date();
-    const time = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    const nextId = Math.max(...data.map(d => d.id)) + 1;
-    setData(prev => [
-      { id: nextId, title: values.title, category: values.category, views: 0, time, status: 'draft' },
-      ...prev,
-    ]);
+    await addForm.validateFields();
     message.success('已添加文章');
     setAddOpen(false);
     addForm.resetFields();
   };
 
   const columns = [
-    { title: 'ID', dataIndex: 'id', width: 80 },
+    { title: 'ID', dataIndex: 'id', width: 240 },
     { title: '文章名称', dataIndex: 'title' },
-    { title: '所属分类', dataIndex: 'category', width: 160 },
-    { title: '发布状态', dataIndex: 'status', width: 120, render: (_: any, record: Article) => (
+    { title: '所属分类', dataIndex: 'categoryName', width: 160 },
+    { title: '发布状态', dataIndex: 'status', width: 160, render: (_: any, record: Article) => (
       <Switch
-        checkedChildren="已发布"
-        unCheckedChildren="未发布"
-        checked={record.status === 'published'}
-        onChange={(checked) => setData(prev => prev.map(a => a.id === record.id ? { ...a, status: (checked ? 'published' : 'draft') as Article['status'] } : a))}
+        checkedChildren="启用"
+        unCheckedChildren="禁用"
+        checked={record.status === 'on'}
+        onChange={(checked) => updateArticleStatusLocal(record.id, checked)}
       />
     ) },
-    { title: '浏览量', dataIndex: 'views', width: 100 },
-    { title: '时间', dataIndex: 'time', width: 180 },
+    { title: '创建时间', dataIndex: 'time', width: 180 },
     { title: '操作', dataIndex: 'action', width: 200, render: (_: any, record: Article) => (
       <div style={{ display: 'flex', gap: 8 }}>
         <Button type="link">编辑</Button>
         <Popconfirm
-          title="确认删除当前文章吗？"
-          okText="删除"
+          title="删除确认"
+          description={`确定要删除${record.title}数据吗？`}
+          okText="确定"
           cancelText="取消"
-          okButtonProps={{ danger: true }}
-          onConfirm={() => removeById(record.id)}
+          onConfirm={() => deleteArticle(record.id)}
         >
           <Button type="link" danger>删除</Button>
         </Popconfirm>
@@ -129,7 +173,7 @@ const ArticleList: React.FC = () => {
                   placeholder="请选择"
                   value={category}
                   onChange={setCategory}
-                  options={categories.map(c => ({ value: c, label: c }))}
+                  options={Object.entries(categoryMap).map(([id, name]) => ({ value: id, label: name }))}
                   allowClear
                 />
               </Form.Item>
@@ -153,15 +197,16 @@ const ArticleList: React.FC = () => {
             <div style={{ marginTop: 16 }}>
               <Table
                 columns={columns}
-                dataSource={paged}
+                dataSource={list}
+                loading={loading}
                 pagination={{
                   current: page,
                   pageSize,
-                  total: filtered.length,
+                  total,
                   showSizeChanger: true,
                   pageSizeOptions: [10, 20, 50],
                   showTotal: (total) => `共 ${total} 条`,
-                  onChange: (p, ps) => { setPage(p); setPageSize(ps); },
+                  onChange: (p, ps) => { fetchArticleList(p, ps); },
                 }}
                 locale={{ emptyText: <Empty description="暂无数据" /> }}
                 rowKey="id"
@@ -190,7 +235,7 @@ const ArticleList: React.FC = () => {
                   <Input placeholder="请输入" maxLength={80} showCount />
                 </Form.Item>
                 <Form.Item label="文章分类" name="category" rules={[{ required: true, message: '请选择分类' }]}> 
-                  <Select placeholder="请选择" options={categories.map(c => ({ value: c, label: c }))} />
+                  <Select placeholder="请选择" options={Object.entries(categoryMap).map(([id, name]) => ({ value: id, label: name }))} />
                 </Form.Item>
                 <Form.Item 
                   label={(
