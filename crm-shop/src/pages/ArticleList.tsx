@@ -123,10 +123,35 @@ const ArticleList: React.FC = () => {
   };
 
   const onAddOk = async () => {
-    await addForm.validateFields();
-    message.success('已添加文章');
-    setAddOpen(false);
-    addForm.resetFields();
+    try {
+      const values = await addForm.validateFields();
+      const params = {
+        category_id: values.category,
+        article_name: values.title,
+        article_image: values.cover?.[0]?.url || (values.cover?.[0]?.response?.data?.url) || '',
+        position: 0,
+        status: values.status,
+        article_content: values.content,
+        publish_time: values.is_scheduled && values.publish_time ? values.publish_time.format('YYYY-MM-DD HH:mm:ss') : ''
+      };
+
+      const res = await axios.post(`${API_BASE_URL}/api/article/create`, params);
+      if (res.data.code === 0) {
+        message.success('已添加文章');
+        setAddOpen(false);
+        addForm.resetFields();
+        setIsScheduled(false);
+        fetchArticleList(1, pageSize);
+      } else {
+        message.error(res.data.msg || '添加失败');
+      }
+    } catch (e) {
+      // form validation error or api error
+      console.error(e);
+      if (axios.isAxiosError(e)) {
+         message.error('请求失败');
+      }
+    }
   };
 
   const columns = [
@@ -249,7 +274,7 @@ const ArticleList: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <div style={{ fontWeight: 600 }}>添加文章</div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <Button onClick={() => { setAddOpen(false); addForm.resetFields(); }}>取消</Button>
+                <Button onClick={() => { setAddOpen(false); addForm.resetFields(); setIsScheduled(false); }}>取消</Button>
                 <Button type="primary" onClick={onAddOk}>保存</Button>
               </div>
             </div>
