@@ -155,7 +155,6 @@ const ArticleCategory: React.FC = () => {
               <Button type="link" danger>删除</Button>
             </Popconfirm>
           )}
-          <Button type="link">查看文章</Button>
         </div>
       );
     } },
