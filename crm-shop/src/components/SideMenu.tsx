@@ -40,6 +40,21 @@ const SideMenu: React.FC = () => {
     fetchMenu();
   }, []);
 
+  useEffect(() => {
+    if (menuData.length === 0) return;
+    
+    const activeParent = menuData.find(item => 
+      item.child_list && item.child_list.length > 0 && item.child_list.some(child => child.permission_url === currentPath)
+    );
+
+    if (activeParent) {
+      setOpenKeys(prev => {
+        if (prev.includes(activeParent.permission_id)) return prev;
+        return [activeParent.permission_id];
+      });
+    }
+  }, [menuData, currentPath]);
+
   const getIcon = (name: string) => {
     switch (name) {
       case '首页': return <HomeOutlined />;
@@ -65,9 +80,7 @@ const SideMenu: React.FC = () => {
     // If it has no children, navigate
     if (!item.child_list || item.child_list.length === 0) {
       navigate(item.permission_url);
-      // Close all other menus? Not necessarily for leaf nodes like Home.
-      // But maybe we want to close expanded menus if we go to a top level page?
-      // Current behavior doesn't seem to enforce closing when clicking Home, but accordion usually applies to expandable items.
+      setOpenKeys([]);
       return;
     }
 
