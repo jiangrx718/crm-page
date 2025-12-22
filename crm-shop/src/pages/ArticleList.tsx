@@ -64,7 +64,14 @@ const ArticleList: React.FC = () => {
   const fetchArticleList = async (p: number = 1, ps: number = 10) => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_BASE_URL}/api/article/list`, { params: { limit: ps, offset: p } });
+      const res = await axios.get(`${API_BASE_URL}/api/article/list`, { 
+        params: { 
+          limit: ps, 
+          offset: p,
+          article_name: keyword,
+          category_id: category || ''
+        } 
+      });
       const data = res.data;
       if (data && data.code === 0 && data.data) {
         const arr = Array.isArray(data.data.list) ? data.data.list : [];
@@ -292,7 +299,7 @@ const ArticleList: React.FC = () => {
                 />
               </Form.Item>
               <Form.Item>
-                <Button type="primary">查询</Button>
+                <Button type="primary" onClick={() => fetchArticleList(1, pageSize)}>查询</Button>
               </Form.Item>
             </Form>
 
