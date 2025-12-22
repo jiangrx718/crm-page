@@ -26,7 +26,7 @@ const ArticleList: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [addForm] = Form.useForm();
-  const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
+  const [categoryOptions, setCategoryOptions] = useState<{ label: string, value: string }[]>([]);
   const hasInitialized = React.useRef(false);
 
   const fetchCategoryMap = async () => {
@@ -34,13 +34,24 @@ const ArticleList: React.FC = () => {
       const res = await axios.get(`${API_BASE_URL}/api/category/list`, { params: { category_type: 1 } });
       const data = res.data;
       if (data && data.code === 0 && data.data && Array.isArray(data.data.list)) {
-        const map: Record<string, string> = {};
-        data.data.list.forEach((item: any) => {
-          const cid = String(item.category_id ?? '');
-          const cname = String(item.category_name ?? '');
-          if (cid) map[cid] = cname;
-        });
-        setCategoryMap(map);
+        const opts: { label: string, value: string }[] = [];
+
+        const process = (list: any[], level: number) => {
+          list.forEach((item: any) => {
+            const cid = String(item.category_id ?? '');
+            const cname = String(item.category_name ?? '');
+            if (cid) {
+              const prefix = level > 0 ? '\u00A0\u00A0'.repeat(level) + '└ ' : '';
+              opts.push({ label: prefix + cname, value: cid });
+            }
+            if (Array.isArray(item.child_list) && item.child_list.length > 0) {
+              process(item.child_list, level + 1);
+            }
+          });
+        };
+
+        process(data.data.list, 0);
+        setCategoryOptions(opts);
       }
     } catch (e) {
       // ignore
@@ -191,7 +202,7 @@ const ArticleList: React.FC = () => {
                   placeholder="请选择"
                   value={category}
                   onChange={setCategory}
-                  options={Object.entries(categoryMap).map(([id, name]) => ({ value: id, label: name }))}
+                  options={categoryOptions}
                   allowClear
                 />
               </Form.Item>
@@ -247,13 +258,13 @@ const ArticleList: React.FC = () => {
               <Form
                 form={addForm}
                 layout="vertical"
-                initialValues={{ title: '', author: '', summary: '', category: undefined, content: '' }}
+                initialValues={{ title: '', category: undefined, content: '' }}
               >
                 <Form.Item label="标题" name="title" rules={[{ required: true, message: '请输入标题' }]}> 
                   <Input placeholder="请输入" maxLength={80} showCount />
                 </Form.Item>
                 <Form.Item label="文章分类" name="category" rules={[{ required: true, message: '请选择分类' }]}> 
-                  <Select placeholder="请选择" options={Object.entries(categoryMap).map(([id, name]) => ({ value: id, label: name }))} />
+                  <Select placeholder="请选择" options={categoryOptions} />
                 </Form.Item>
                 <Form.Item 
                   label={(
@@ -273,12 +284,7 @@ const ArticleList: React.FC = () => {
                   </Upload>
                 </Form.Item>
                 {/* 尺寸提示已合并到标签中 */}
-                <Form.Item label="作者" name="author"> 
-                  <Input placeholder="请输入" maxLength={10} showCount />
-                </Form.Item>
-                <Form.Item label="文章简介" name="summary"> 
-                  <Input.TextArea placeholder="请输入" rows={3} maxLength={300} showCount />
-                </Form.Item>
+                
                 {/* 封面上传区域如上，保持与上传图样式一致 */}
 
                 <Divider orientation="center">文章内容</Divider>
