@@ -60,7 +60,7 @@ const ArticleList: React.FC = () => {
           id: String(it.article_id ?? ''),
           title: String(it.article_name ?? ''),
           categoryId: String(it.category_id ?? ''),
-          categoryName: categoryMap[String(it.category_id ?? '')] ?? String(it.category_id ?? ''),
+          categoryName: String(it.category_name ?? ''),
           time: String(it.created_at ?? ''),
           status: it.status === 'on' ? 'on' : 'off',
         }));
@@ -89,14 +89,7 @@ const ArticleList: React.FC = () => {
     }
   }, []);
 
-  React.useEffect(() => {
-    if (Object.keys(categoryMap).length > 0) {
-      setList(prev => prev.map(it => ({
-        ...it,
-        categoryName: categoryMap[it.categoryId] ?? it.categoryId
-      })));
-    }
-  }, [categoryMap]);
+
 
   const updateArticleStatusLocal = (id: string, checked: boolean) => {
     setList(prev => prev.map(a => a.id === id ? { ...a, status: checked ? 'on' : 'off' } : a));
