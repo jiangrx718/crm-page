@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Popconfirm, message, Switch, Divider, Upload } from 'antd';
+import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Popconfirm, message, Switch, Divider, Upload, Tooltip } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import RichEditor from '../components/RichEditor';
@@ -7,6 +7,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../config';
 
 type Article = {
+  serial: string;
   id: string;
   title: string;
   categoryId: string;
@@ -55,6 +56,7 @@ const ArticleList: React.FC = () => {
         const arr = Array.isArray(data.data.list) ? data.data.list : [];
         const cnt = typeof data.data.count === 'number' ? data.data.count : 0;
         const rows: Article[] = arr.map((it: any) => ({
+          serial: String(it.id ?? ''),
           id: String(it.article_id ?? ''),
           title: String(it.article_name ?? ''),
           categoryId: String(it.category_id ?? ''),
@@ -123,7 +125,14 @@ const ArticleList: React.FC = () => {
   };
 
   const columns = [
-    { title: 'ID', dataIndex: 'id', width: 240 },
+    { title: '序号', dataIndex: 'serial', width: 100 },
+    { title: 'ID', dataIndex: 'id', width: 240, render: (text: string) => (
+      <Tooltip title={text}>
+        <span style={{ maxWidth: 220, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {text}
+        </span>
+      </Tooltip>
+    ) },
     { title: '文章名称', dataIndex: 'title' },
     { title: '所属分类', dataIndex: 'categoryName', width: 160 },
     { title: '发布状态', dataIndex: 'status', width: 160, render: (_: any, record: Article) => (
