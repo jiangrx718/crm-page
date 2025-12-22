@@ -153,6 +153,7 @@ const ArticleList: React.FC = () => {
             name: 'image.png',
             status: 'done',
             url: d.article_image,
+            object_name: d.article_image,
           }] : []
         });
       } else {
@@ -166,10 +167,12 @@ const ArticleList: React.FC = () => {
   const onAddOk = async () => {
     try {
       const values = await addForm.validateFields();
+      const coverItem = values.cover?.[0];
+      const articleImage = coverItem?.object_name || coverItem?.response?.data?.object_name || '';
       const params: any = {
         category_id: values.category,
         article_name: values.title,
-        article_image: values.cover?.[0]?.url || (values.cover?.[0]?.response?.data?.url) || '',
+        article_image: articleImage,
         position: Number(values.position) || 0,
         status: values.status,
         article_content: values.content,
@@ -374,7 +377,45 @@ const ArticleList: React.FC = () => {
                   valuePropName="fileList"
                   getValueFromEvent={(e) => e?.fileList}
                 > 
-                  <Upload listType="picture-card" beforeUpload={() => false}>
+                  <Upload
+                    listType="picture-card"
+                    maxCount={1}
+                    customRequest={async (options: any) => {
+                      const { file, onSuccess, onError, onProgress } = options;
+                      try {
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        const res = await axios.post(`${API_BASE_URL}/api/file/upload`, formData, {
+                          headers: { 'Content-Type': 'multipart/form-data' },
+                          onUploadProgress: (evt) => {
+                            const total = evt.total || 1;
+                            const percent = Math.round((evt.loaded / total) * 100);
+                            onProgress?.({ percent });
+                          }
+                        });
+                        if (res?.data?.code === 0) {
+                          const previewUrl = res.data?.data?.preview_url || '';
+                          const objectName = res.data?.data?.object_name || '';
+                          // 将预览地址写入文件项的 url，便于表单直接读取
+                          options.file.url = previewUrl;
+                          (options.file as any).object_name = objectName;
+                          onSuccess?.(res.data);
+                        } else {
+                          onError?.(new Error(res?.data?.message || res?.data?.msg || '上传失败'));
+                        }
+                      } catch (err: any) {
+                        onError?.(err);
+                      }
+                    }}
+                    onChange={({ file, fileList }) => {
+                      if (file.status === 'done') {
+                        const url = (file as any)?.url || (file as any)?.response?.data?.preview_url || '';
+                        const objectName = (file as any)?.object_name || (file as any)?.response?.data?.object_name || '';
+                        const patched = fileList.map((f: any) => (f.uid === file.uid ? { ...f, url, object_name: objectName } : f));
+                        addForm.setFieldsValue({ cover: patched });
+                      }
+                    }}
+                  >
                     <div>
                       <PlusOutlined />
                     </div>
