@@ -294,7 +294,25 @@ const AdminList: React.FC = () => {
               }}
             />
           </Form.Item>
-          <Form.Item label="管理员昵称" name="nickname" rules={[{ required: true, message: '请输入管理员昵称' }]}> 
+          <Form.Item
+            label="管理员昵称"
+            name="nickname"
+            rules={[
+              { required: true, message: '请输入管理员昵称' },
+              {
+                validator: (_, value) => {
+                  // 仅在“添加管理员”场景限制昵称为手机号
+                  if (editing) return Promise.resolve();
+                  const v = String(value || '').trim();
+                  if (!v) return Promise.resolve();
+                  if (/^1[3-9]\d{9}$/.test(v)) {
+                    return Promise.reject(new Error('管理员昵称不能填写手机号'));
+                  }
+                  return Promise.resolve();
+                }
+              }
+            ]}
+          > 
             <Input placeholder="请输入管理员昵称" disabled={editing} />
           </Form.Item>
           <Form.Item
