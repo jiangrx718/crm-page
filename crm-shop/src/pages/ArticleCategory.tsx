@@ -144,11 +144,21 @@ const ArticleCategory: React.FC = () => {
                     message.success('已删除当前类别');
                     fetchCategories();
                   } else {
-                    message.error(res.data.msg || '删除失败');
+                    Modal.destroyAll();
+                    Modal.warning({
+                      title: '提示',
+                      content: res.data.msg || '删除失败',
+                      okText: '知道了',
+                    });
                   }
                 } catch (error) {
                   console.error(error);
-                  message.error('删除请求失败');
+                  Modal.destroyAll();
+                  Modal.warning({
+                    title: '提示',
+                    content: '删除请求失败',
+                    okText: '知道了',
+                  });
                 }
               }}
             >
