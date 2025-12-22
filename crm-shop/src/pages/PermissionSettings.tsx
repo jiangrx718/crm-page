@@ -468,6 +468,7 @@ const PermissionSettings: React.FC = () => {
               treeData={treeOptions}
               treeDefaultExpandAll
               style={{ width: '100%' }}
+              disabled={editing?.permission_type !== 1}
             />
           </Form.Item>
           <Form.Item label="权限类型" name="permissionType" rules={[{ required: true, message: '请选择权限类型' }]}>
@@ -478,6 +479,7 @@ const PermissionSettings: React.FC = () => {
                 { value: 2, label: '按钮' },
                 { value: 3, label: '接口' },
               ]}
+              disabled={editing?.permission_type !== 1}
             />
           </Form.Item>
           <Form.Item
@@ -496,7 +498,7 @@ const PermissionSettings: React.FC = () => {
               }
             ]}
           > 
-            <Input placeholder="例如：/admin/index" />
+            <Input placeholder="例如：/admin/index" disabled={editing?.permission_type !== 1} />
           </Form.Item>
           <Form.Item label="排序" name="sort" rules={[{ required: true, message: '请输入排序值' }]}> 
             <InputNumber style={{ width: '100%' }} min={0} placeholder="请输入排序" />
