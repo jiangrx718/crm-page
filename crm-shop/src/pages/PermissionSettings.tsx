@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
-import { Card, Form, Input, Button, Table, Empty, Breadcrumb, Modal, InputNumber, Switch, TreeSelect, Tooltip, Popconfirm, Radio, Spin, message } from 'antd';
+import { Card, Form, Input, Button, Table, Empty, Breadcrumb, Modal, InputNumber, Switch, TreeSelect, Tooltip, Popconfirm, Radio, Spin, message, Select } from 'antd';
 
 import { Link } from 'react-router-dom';
 
@@ -9,6 +9,7 @@ type Permission = {
   id: number;
   name: string;
   type: string;
+  permission_type?: number;
   sort: number;
   visible: boolean;
   icon?: string;
@@ -90,6 +91,7 @@ const PermissionSettings: React.FC = () => {
       id: index + Math.random() * 100000,
       name: item.permission_name,
       type: item.permission_url,
+      permission_type: item.permission_type,
       sort: item.position,
       visible: item.status === 'on',
       permission_id: item.permission_id,
@@ -172,6 +174,7 @@ const PermissionSettings: React.FC = () => {
       editForm.setFieldsValue({
         name: editing.name,
         type: editing.type,
+        permissionType: editing.permission_type,
         sort: editing.sort,
         visible: editing.visible,
         parentId: parentNode ? parentNode.id : undefined,
@@ -182,6 +185,12 @@ const PermissionSettings: React.FC = () => {
   const columns = [
     { title: '权限名称', dataIndex: 'name', width: 200 },
     { title: '权限路径', dataIndex: 'type', width: 260 },
+    { title: '权限类型', dataIndex: 'permission_type', width: 120, render: (val: number) => {
+      if (val === 1) return '菜单';
+      if (val === 2) return '按钮';
+      if (val === 3) return '接口';
+      return '-';
+    } },
     { title: '排序', dataIndex: 'sort', width: 120 },
     {
       title: '显示状态',
@@ -320,17 +329,18 @@ const PermissionSettings: React.FC = () => {
             key="ok"
             type="primary"
             onClick={() => {
-              form.validateFields().then((vals) => {
-                const parentPermission = vals.parentId ? findPermissionById(permissions, vals.parentId) : null;
-                const parentId = parentPermission?.permission_id || '';
-                
-                const payload = {
-                  permission_name: vals.name,
-                  permission_url: vals.type,
-                  parent_id: parentId,
-                  status: vals.visible ? 'on' : 'off',
-                  position: Number(vals.sort || 0),
-                };
+                  form.validateFields().then((vals) => {
+                    const parentPermission = vals.parentId ? findPermissionById(permissions, vals.parentId) : null;
+                    const parentId = parentPermission?.permission_id || '';
+                    
+                    const payload = {
+                      permission_name: vals.name,
+                      permission_url: vals.type,
+                      parent_id: parentId,
+                      permission_type: Number(vals.permissionType),
+                      status: vals.visible ? 'on' : 'off',
+                      position: Number(vals.sort || 0),
+                    };
 
                 axios.post(`${API_BASE_URL}/api/permission/create`, payload).then(() => {
                   message.success('权限项添加成功');
@@ -361,7 +371,32 @@ const PermissionSettings: React.FC = () => {
               style={{ width: '100%' }}
             />
           </Form.Item>
-          <Form.Item label="权限路径" name="type" rules={[{ required: true, message: '请输入权限路径' }]}> 
+          <Form.Item label="权限类型" name="permissionType" rules={[{ required: true, message: '请选择权限类型' }]}>
+            <Select
+              placeholder="请选择权限类型"
+              options={[
+                { value: 1, label: '菜单' },
+                { value: 2, label: '按钮' },
+                { value: 3, label: '接口' },
+              ]}
+            />
+          </Form.Item>
+          <Form.Item
+            label="权限路径"
+            name="type"
+            rules={[
+              {
+                validator: (_, value) => {
+                  const pt = form.getFieldValue('permissionType');
+                  const v = String(value || '').trim();
+                  if (pt === 1 && !v) {
+                    return Promise.reject(new Error('请输入权限路径'));
+                  }
+                  return Promise.resolve();
+                }
+              }
+            ]}
+          > 
             <Input placeholder="例如：/home" />
           </Form.Item>
           <Form.Item label="排序" name="sort" initialValue={100} rules={[{ required: true, message: '请输入排序值' }]}> 
@@ -401,6 +436,7 @@ const PermissionSettings: React.FC = () => {
                   permission_id: editing.permission_id || '',
                   permission_name: vals.name,
                   permission_url: vals.type,
+                  permission_type: Number(vals.permissionType),
                   parent_id: parentId,
                   status: vals.visible ? 'on' : 'off',
                   position: Number(vals.sort || 0),
@@ -434,7 +470,32 @@ const PermissionSettings: React.FC = () => {
               style={{ width: '100%' }}
             />
           </Form.Item>
-          <Form.Item label="权限路径" name="type" rules={[{ required: true, message: '请输入权限路径' }]}> 
+          <Form.Item label="权限类型" name="permissionType" rules={[{ required: true, message: '请选择权限类型' }]}>
+            <Select
+              placeholder="请选择权限类型"
+              options={[
+                { value: 1, label: '菜单' },
+                { value: 2, label: '按钮' },
+                { value: 3, label: '接口' },
+              ]}
+            />
+          </Form.Item>
+          <Form.Item
+            label="权限路径"
+            name="type"
+            rules={[
+              {
+                validator: (_, value) => {
+                  const pt = editForm.getFieldValue('permissionType');
+                  const v = String(value || '').trim();
+                  if (pt === 1 && !v) {
+                    return Promise.reject(new Error('请输入权限路径'));
+                  }
+                  return Promise.resolve();
+                }
+              }
+            ]}
+          > 
             <Input placeholder="例如：/admin/index" />
           </Form.Item>
           <Form.Item label="排序" name="sort" rules={[{ required: true, message: '请输入排序值' }]}> 
