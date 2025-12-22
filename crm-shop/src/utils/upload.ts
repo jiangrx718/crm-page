@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 // 使用后端代理上传接口
-const UPLOAD_API_URL = '/api/file/upload';
+const UPLOAD_API_URL = `${API_BASE_URL}/api/file/upload`;
 
 export const uploadFileToBackend = async (file: File | Blob): Promise<string> => {
   const formData = new FormData();
@@ -19,13 +20,16 @@ export const uploadFileToBackend = async (file: File | Blob): Promise<string> =>
       },
     });
 
-    if (response.data && response.data.url) {
-      return response.data.url;
-    } else if (typeof response.data === 'string') {
-        return response.data;
+    const data = response.data;
+    if (data && data.code === 0 && data.data) {
+      const previewUrl = data.data.preview_url;
+      if (previewUrl) {
+        return previewUrl;
+      }
+      throw new Error('preview_url missing');
     }
-    
-    throw new Error('Invalid response format');
+    const msg = (data && (data.message || data.msg)) || '上传失败';
+    throw new Error(msg);
   } catch (error) {
     console.error("File upload failed:", error);
     throw error;
