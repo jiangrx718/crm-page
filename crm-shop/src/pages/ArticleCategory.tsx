@@ -311,7 +311,7 @@ const ArticleCategory: React.FC = () => {
             labelCol={{ span: 4 }}
             wrapperCol={{ span: 20 }}
             requiredMark={true}
-            initialValues={{ parentId: 0, status: 'show', sort: 0 }}
+            initialValues={{ parentId: 0, status: 'show', sort: 100 }}
           >
             <Form.Item label="上级分类" name="parentId">
               <Select
