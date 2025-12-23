@@ -48,18 +48,24 @@ const PermissionSettings: React.FC = () => {
   // 自动展开所有行
   useEffect(() => {
     if (permissions.length > 0) {
-      const allKeys = extractAllKeys(permissions);
+      const allKeys = extractDefaultExpandedKeys(permissions);
       setExpandedRowKeys(allKeys);
     }
   }, [permissions]);
 
-  const extractAllKeys = (items: Permission[]): React.Key[] => {
-    const keys: React.Key[] = [];
+  const extractDefaultExpandedKeys = (items: Permission[]): (string | number)[] => {
+    const keys: (string | number)[] = [];
     const collect = (items: Permission[]) => {
       items.forEach((item) => {
-        keys.push(item.id);
-        if (item.children && item.children.length > 0) {
-          collect(item.children);
+        // 只有当当前节点是菜单(type=1)，且包含子菜单(子节点中有type=1)时才展开
+        const isMenu = item.permission_type === 1;
+        const hasMenuChild = item.children && item.children.some(child => child.permission_type === 1);
+
+        if (isMenu && hasMenuChild) {
+          keys.push(item.id);
+          if (item.children && item.children.length > 0) {
+            collect(item.children);
+          }
         }
       });
     };
@@ -151,6 +157,8 @@ const PermissionSettings: React.FC = () => {
   };
 
   const treeOptions = React.useMemo(() => toTreeData(permissions), [permissions]);
+  const defaultTreeExpandedKeys = React.useMemo(() => extractDefaultExpandedKeys(permissions), [permissions]);
+
   const findByPermissionId = (items: Permission[], pid?: string): Permission | undefined => {
     if (!pid) return undefined;
     for (const item of items) {
@@ -367,7 +375,7 @@ const PermissionSettings: React.FC = () => {
               placeholder="请选择"
               allowClear
               treeData={treeOptions}
-              treeDefaultExpandAll
+              treeDefaultExpandedKeys={defaultTreeExpandedKeys}
               style={{ width: '100%' }}
             />
           </Form.Item>
@@ -379,25 +387,43 @@ const PermissionSettings: React.FC = () => {
                 { value: 2, label: '按钮' },
                 { value: 3, label: '接口' },
               ]}
+              onChange={() => {
+                // 强制刷新表单以更新依赖permissionType的字段状态
+                const pt = form.getFieldValue('permissionType');
+                // 如果不是菜单，清空权限路径（可选，根据需求）
+                if (pt !== 1) {
+                   form.setFieldsValue({ type: '' });
+                }
+              }}
             />
           </Form.Item>
           <Form.Item
-            label="权限路径"
-            name="type"
-            rules={[
-              {
-                validator: (_, value) => {
-                  const pt = form.getFieldValue('permissionType');
-                  const v = String(value || '').trim();
-                  if (pt === 1 && !v) {
-                    return Promise.reject(new Error('请输入权限路径'));
+            shouldUpdate={(prevValues, currentValues) => prevValues.permissionType !== currentValues.permissionType}
+            noStyle
+          >
+            {({ getFieldValue }) => (
+              <Form.Item
+                label="权限路径"
+                name="type"
+                rules={[
+                  {
+                    validator: (_, value) => {
+                      const pt = getFieldValue('permissionType');
+                      const v = String(value || '').trim();
+                      if (pt === 1 && !v) {
+                        return Promise.reject(new Error('请输入权限路径'));
+                      }
+                      return Promise.resolve();
+                    }
                   }
-                  return Promise.resolve();
-                }
-              }
-            ]}
-          > 
-            <Input placeholder="例如：/home" />
+                ]}
+              > 
+                <Input 
+                  placeholder="例如：/home" 
+                  disabled={getFieldValue('permissionType') !== 1} 
+                />
+              </Form.Item>
+            )}
           </Form.Item>
           <Form.Item label="排序" name="sort" initialValue={100} rules={[{ required: true, message: '请输入排序值' }]}> 
             <InputNumber style={{ width: '100%' }} min={0} placeholder="请输入排序" />
@@ -466,7 +492,7 @@ const PermissionSettings: React.FC = () => {
               placeholder="请选择"
               allowClear
               treeData={treeOptions}
-              treeDefaultExpandAll
+              treeDefaultExpandedKeys={defaultTreeExpandedKeys}
               style={{ width: '100%' }}
               disabled={editing?.permission_type !== 1}
             />
