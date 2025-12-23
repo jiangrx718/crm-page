@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
-import { Card, Form, Input, Button, Table, Empty, Breadcrumb, Modal, InputNumber, Switch, TreeSelect, Tooltip, Popconfirm, Radio, Spin, message, Select } from 'antd';
+import { Card, Form, Input, Button, Table, Empty, Breadcrumb, Modal, InputNumber, Switch, TreeSelect, Tooltip, Popconfirm, Radio, Spin, message, Select, Tag } from 'antd';
 
 import { Link } from 'react-router-dom';
 
@@ -194,10 +194,9 @@ const PermissionSettings: React.FC = () => {
     { title: '权限名称', dataIndex: 'name', width: 200 },
     { title: '权限路径', dataIndex: 'type', width: 260 },
     { title: '权限类型', dataIndex: 'permission_type', width: 120, render: (val: number) => {
-      if (val === 1) return '菜单';
-      if (val === 2) return '按钮';
-      if (val === 3) return '接口';
-      return '-';
+      if (val === 1) return <Tag color="#1B9CFC">菜单</Tag>;
+      if (val === 3) return <Tag color="#58B19F">接口</Tag>;
+      return <Tag>{val === 2 ? '按钮' : '-'}</Tag>;
     } },
     { title: '排序', dataIndex: 'sort', width: 120 },
     {
@@ -420,7 +419,6 @@ const PermissionSettings: React.FC = () => {
               > 
                 <Input 
                   placeholder="例如：/home" 
-                  disabled={getFieldValue('permissionType') !== 1} 
                 />
               </Form.Item>
             )}
@@ -524,7 +522,7 @@ const PermissionSettings: React.FC = () => {
               }
             ]}
           > 
-            <Input placeholder="例如：/admin/index" disabled={editing?.permission_type !== 1} />
+            <Input placeholder="例如：/admin/index" />
           </Form.Item>
           <Form.Item label="排序" name="sort" rules={[{ required: true, message: '请输入排序值' }]}> 
             <InputNumber style={{ width: '100%' }} min={0} placeholder="请输入排序" />
