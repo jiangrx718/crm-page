@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Modal, Radio, message, Tag, Popconfirm } from 'antd';
+import { showError } from '../utils/notify';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
@@ -90,10 +91,10 @@ const AdminList: React.FC = () => {
                 message.success('操作成功');
                 fetchAdminList(page, pageSize);
               } else {
-                message.error((data && data.msg) || '删除失败');
+                showError();
               }
             } catch (e) {
-              message.error('请求失败');
+              console.error(e);
             }
           }}
         >

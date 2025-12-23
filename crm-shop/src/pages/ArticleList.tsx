@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Popconfirm, message, Switch, Divider, Upload, Tooltip, Radio, DatePicker } from 'antd';
+import { showError } from '../utils/notify';
 import { PlusOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import RichEditor from '../components/RichEditor';
@@ -124,10 +125,10 @@ const ArticleList: React.FC = () => {
         message.success('操作成功');
         fetchArticleList(page, pageSize);
       } else {
-        message.error((data && data.msg) || '删除失败');
+        showError();
       }
     } catch (e) {
-      message.error('请求失败');
+      console.error(e);
     }
   };
 
@@ -157,10 +158,10 @@ const ArticleList: React.FC = () => {
           }] : []
         });
       } else {
-        message.error((data && data.msg) || '获取详情失败');
+        showError();
       }
     } catch (e) {
-      message.error('请求失败');
+      console.error(e);
     }
   };
 
@@ -204,13 +205,13 @@ const ArticleList: React.FC = () => {
             fetchArticleList(1, pageSize);
         }
       } else {
-        message.error(res.data.msg || (editId ? '保存失败' : '添加失败'));
+        showError();
       }
     } catch (e) {
       // form validation error or api error
       console.error(e);
       if (axios.isAxiosError(e)) {
-         message.error('请求失败');
+         // handled by axios interceptor
       }
     }
   };
@@ -242,10 +243,10 @@ const ArticleList: React.FC = () => {
               message.success('状态更新成功');
               updateArticleStatusLocal(record.id, checked);
             } else {
-              message.error((data && data.msg) || '状态更新失败');
+              showError();
             }
           } catch (e) {
-            message.error('请求失败');
+            console.error(e);
           }
         }}
       />

@@ -1,6 +1,5 @@
 import React, { useRef, useMemo } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
-import { message } from 'antd';
 import { uploadFileToBackend } from '../utils/upload';
 
 interface RichEditorProps {
@@ -37,7 +36,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ value, onChange, height = 500 }
         })
         .catch((err) => {
           console.error('Image upload failed:', err);
-          message.error('图片上传失败: ' + (err.message || err));
+          // handled by axios interceptor
           
           // 为了避免 TinyMCE 弹出错误提示框，我们这里必须 resolve。
           // 策略：resolve 一个特定的“失败标识 URL”，然后利用 setTimeout 在编辑器渲染出这个图片后立即将其删除。
@@ -71,7 +70,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ value, onChange, height = 500 }
               })
               .catch((err) => {
                 console.error('Media upload failed:', err);
-                message.error('多媒体上传失败: ' + (err.message || err));
+                // handled by axios interceptor
               });
           }
         };

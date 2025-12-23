@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Switch, Modal, InputNumber, Upload, Radio, Popconfirm, message, Tooltip } from 'antd';
+import { showError } from '../utils/notify';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
@@ -35,7 +36,6 @@ const ArticleCategory: React.FC = () => {
       }
     } catch (e) {
       console.error('Failed to fetch categories', e);
-      message.error('获取分类列表失败');
     }
   };
 
@@ -111,13 +111,13 @@ const ArticleCategory: React.FC = () => {
               message.success('状态更新成功');
               setData(prev => updateStatusById(prev, record.id, checked));
             } else {
-              message.error(res.data.msg || '状态更新失败');
+              showError();
               // Revert switch if failed
               setData(prev => [...prev]); 
             }
           } catch (error) {
             console.error(error);
-            message.error('请求失败');
+            // handled by axios interceptor
           }
         }}
       />
@@ -185,7 +185,7 @@ const ArticleCategory: React.FC = () => {
       const iconUrl = file?.url || file?.thumbUrl || editing?.icon || '';
 
       if (!editing?.id) {
-        message.error('编辑失败：无法获取分类ID');
+        showError();
         return;
       }
 
@@ -207,7 +207,7 @@ const ArticleCategory: React.FC = () => {
     } catch (error) {
       console.error(error);
       if (axios.isAxiosError(error)) {
-        message.error('更新失败: ' + (error.response?.data?.message || error.message));
+        // handled by axios interceptor
       }
     }
   };
@@ -238,7 +238,7 @@ const ArticleCategory: React.FC = () => {
     } catch (error) {
       console.error(error);
       if (axios.isAxiosError(error)) {
-        message.error('添加失败: ' + (error.response?.data?.message || error.message));
+        // handled by axios interceptor
       }
     }
   };

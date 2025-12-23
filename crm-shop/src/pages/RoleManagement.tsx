@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Input, Button, Table, Empty, Breadcrumb, Modal, Radio, Tree, Spin, message, Tag, Popconfirm } from 'antd';
+import { showError } from '../utils/notify';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
@@ -75,12 +76,12 @@ const RoleManagement: React.FC = () => {
               setCheckedKeys([]);
             }
           } else {
-            message.error('获取权限列表失败');
+            showError();
             setPermTreeData([]);
           }
         })
         .catch(() => {
-          message.error('请求权限列表出错');
+          // handled by axios interceptor
           setPermTreeData([]);
         })
         .finally(() => setPermLoading(false));

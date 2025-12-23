@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 import { Card, Form, Input, Button, Table, Empty, Breadcrumb, Modal, InputNumber, Switch, TreeSelect, Tooltip, Popconfirm, Radio, Spin, message, Select, Tag } from 'antd';
+import { showError } from '../utils/notify';
 
 import { Link } from 'react-router-dom';
 
@@ -82,10 +83,9 @@ const PermissionSettings: React.FC = () => {
         const converted = convertPermissions(data.data.list);
         setPermissions(converted);
       } else {
-        message.error('获取权限列表失败');
+        showError();
       }
     } catch (e) {
-      message.error('请求权限列表出错');
       console.error(e);
     } finally {
       setLoading(false);
@@ -259,10 +259,10 @@ const PermissionSettings: React.FC = () => {
                         message.success('操作成功');
                         fetchPermissions();
                       } else {
-                        message.error((data && data.msg) || '删除失败');
+                        showError();
                       }
                     } catch (error) {
-                      message.error('请求失败');
+                      console.error(error);
                     }
                   }}
                 >
@@ -355,7 +355,7 @@ const PermissionSettings: React.FC = () => {
                   form.resetFields();
                   fetchPermissions();
                 }).catch((error) => {
-                  message.error('添加权限项失败');
+                  console.error(error);
                   console.error(error);
                 });
               });
@@ -471,7 +471,7 @@ const PermissionSettings: React.FC = () => {
                   setEditing(null);
                   fetchPermissions();
                 }).catch((error) => {
-                  message.error('更新权限项失败');
+                  console.error(error);
                   console.error(error);
                 });
               });
