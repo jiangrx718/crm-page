@@ -2,7 +2,7 @@ import axios from 'axios';
 import { eventBus } from './utils/eventBus';
 
 const isLocal = typeof window !== 'undefined' && window.location.origin.startsWith('http://localhost');
-export const API_BASE_URL = isLocal ? 'http://127.0.0.1:8080' : 'http://127.0.0.1:8080';
+export const API_BASE_URL = isLocal ? 'http://127.0.0.1:8080' : 'http://192.168.64.2:30080';
 
 // 配置 axios
 axios.defaults.timeout = 30000;
