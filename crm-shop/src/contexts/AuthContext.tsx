@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   username: string | null;
   login: (token: string, username: string) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,12 +39,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     axios.defaults.headers.common['Authorization'] = token;
   };
 
-  const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('username');
-    setIsAuthenticated(false);
-    setUsername(null);
-    delete axios.defaults.headers.common['Authorization'];
+  const logout = async () => {
+    try {
+      await axios.post(`${API_BASE_URL}/api/logout/do`, {});
+    } catch (e) {
+    } finally {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('username');
+      setIsAuthenticated(false);
+      setUsername(null);
+      delete axios.defaults.headers.common['Authorization'];
+    }
   };
 
   const value = {
