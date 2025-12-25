@@ -35,7 +35,7 @@ const ArticleList: React.FC = () => {
 
   const fetchCategoryMap = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/category/list`, { params: { category_type: 1 } });
+      const res = await axios.get(`${API_BASE_URL}/api/category/article/list`, { params: { category_type: 1 } });
       const data = res.data;
       if (data && data.code === 0 && data.data && Array.isArray(data.data.list)) {
         const opts: { label: string, value: string }[] = [];
