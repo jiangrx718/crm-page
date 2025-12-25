@@ -26,6 +26,7 @@ axios.interceptors.response.use(
   (response) => {
     const res = response.data;
     const url = response.config.url || '';
+    const status = (response as any)?.status;
     
     // 判断是否为模型相关接口 (包含 /api/v1/)
     const isModelApi = url.includes('/api/v1/');
@@ -36,10 +37,14 @@ axios.interceptors.response.use(
       : (res.code == 0);
 
     if (res && typeof res.code !== 'undefined' && !isSuccess) {
-      console.log('Global Error Interceptor Triggered:', res);
+      const rawMsg = res.msg || '';
+      const isForbidden =
+        status === 403 ||
+        res.code === 403 ||
+        (typeof rawMsg === 'string' && /forbidden/i.test(rawMsg));
       eventBus.emit('global_error', {
-        type: 'warning',
-        content: res.msg || '操作失败'
+        type: 'error',
+        content: isForbidden ? 'Request failed with status code 403' : (rawMsg || '操作失败')
       });
     }
     return response;
@@ -48,7 +53,12 @@ axios.interceptors.response.use(
     console.error('Global Error Interceptor (Network):', error);
     if (error.response) {
       // 优先显示接口返回的 msg
-      const msg = error.response.data?.msg || '网络请求失败';
+      const status = error.response.status;
+      const serverMsg = error.response.data?.msg;
+      const isForbidden =
+        status === 403 ||
+        (typeof serverMsg === 'string' && /forbidden/i.test(serverMsg));
+      const msg = isForbidden ? 'Request failed with status code 403' : (serverMsg || '网络请求失败');
       eventBus.emit('global_error', {
         type: 'error',
         content: msg
