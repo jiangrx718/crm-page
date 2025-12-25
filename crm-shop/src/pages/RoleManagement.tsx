@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 
+const REQUIRED_NAMES = ['首页', '基础'];
+
 const RoleManagement: React.FC = () => {
   // 移除未使用的筛选状态与关键词
   const [openAdd, setOpenAdd] = useState(false);
@@ -49,9 +51,25 @@ const RoleManagement: React.FC = () => {
       return {
         key: item.permission_id,
         title: item.permission_name,
+        disableCheckbox: REQUIRED_NAMES.includes(item.permission_name),
         children: hasChildren ? toTreeNodes(item.child_list, map, leaves) : undefined,
       };
     });
+
+  const collectRequiredLeafKeys = (nodes: any[]): string[] => {
+    const result: string[] = [];
+    const walk = (list: any[]) => {
+      list.forEach((n) => {
+        if (n.children && n.children.length) {
+          walk(n.children);
+        } else if (REQUIRED_NAMES.includes(n.title)) {
+          result.push(n.key);
+        }
+      });
+    };
+    walk(nodes);
+    return result;
+  };
 
   useEffect(() => {
     if (openAdd) {
@@ -68,12 +86,13 @@ const RoleManagement: React.FC = () => {
             setParentMap(map);
             setExpandedKeys(nodes.map((n) => n.key));
             setAutoExpandParent(false);
+            const requiredLeafKeys = collectRequiredLeafKeys(nodes);
             if (editing && currentRole) {
-              // 过滤出叶子节点用于 UI 显示，Antd Tree 会自动计算父节点状态
               const uiKeys = (currentRole.permission || []).filter((key: string) => leaves.has(key));
-              setCheckedKeys(uiKeys);
+              const merged = Array.from(new Set([...(uiKeys || []), ...requiredLeafKeys]));
+              setCheckedKeys(merged);
             } else {
-              setCheckedKeys([]);
+              setCheckedKeys(requiredLeafKeys);
             }
           } else {
             showError();
@@ -247,6 +266,8 @@ const RoleManagement: React.FC = () => {
             form.validateFields().then(async (vals) => {
               // 提交前，根据 parentMap 补充所有父节点 ID
               const currentKeys = new Set<any>(Array.isArray(checkedKeys) ? checkedKeys : []);
+              // 强制包含必选权限
+              collectRequiredLeafKeys(permTreeData).forEach(k => currentKeys.add(k));
               const keysToCheck = [...currentKeys];
               keysToCheck.forEach(key => {
                 let current = key;
