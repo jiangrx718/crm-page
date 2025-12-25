@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { eventBus } from './utils/eventBus';
+import { showError } from './utils/notify';
 
 const isLocal = typeof window !== 'undefined' && window.location.origin.startsWith('http://localhost');
 export const API_BASE_URL = isLocal ? 'http://127.0.0.1:8080' : 'http://192.168.64.2:30080';
@@ -42,10 +43,14 @@ axios.interceptors.response.use(
         status === 403 ||
         res.code === 403 ||
         (typeof rawMsg === 'string' && /forbidden/i.test(rawMsg));
-      eventBus.emit('global_error', {
-        type: 'error',
-        content: isForbidden ? 'Request failed with status code 403' : (rawMsg || '操作失败')
-      });
+      if (isForbidden) {
+        showError('Request failed with status code 403');
+      } else {
+        eventBus.emit('global_error', {
+          type: 'error',
+          content: rawMsg || '操作失败'
+        });
+      }
     }
     return response;
   },
@@ -58,11 +63,15 @@ axios.interceptors.response.use(
       const isForbidden =
         status === 403 ||
         (typeof serverMsg === 'string' && /forbidden/i.test(serverMsg));
-      const msg = isForbidden ? 'Request failed with status code 403' : (serverMsg || '网络请求失败');
-      eventBus.emit('global_error', {
-        type: 'error',
-        content: msg
-      });
+      if (isForbidden) {
+        showError('Request failed with status code 403');
+      } else {
+        const msg = serverMsg || '网络请求失败';
+        eventBus.emit('global_error', {
+          type: 'error',
+          content: msg
+        });
+      }
       
       if (error.response.status === 401) {
         try {
