@@ -82,10 +82,7 @@ axios.interceptors.response.use(
         }
       }
     } else {
-      eventBus.emit('global_error', {
-        type: 'error',
-        content: error.message || '网络请求失败'
-      });
+      showError(error.message || '网络请求失败');
     }
     return Promise.reject(error);
   }
