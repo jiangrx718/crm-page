@@ -28,6 +28,7 @@ type Permission = {
 };
 
 const PermissionSettings: React.FC = () => {
+  const LOCKED_NAMES = ['首页', '基础'];
   const [openAdd, setOpenAdd] = useState(false);
   const [form] = Form.useForm();
   const [showEdit, setShowEdit] = useState(false);
@@ -483,7 +484,10 @@ const PermissionSettings: React.FC = () => {
       >
         <Form form={editForm} layout="vertical" requiredMark={false}>
           <Form.Item label="权限名称" name="name" rules={[{ required: true, message: '请输入权限名称' }]}> 
-            <Input placeholder="请输入权限名称" />
+            <Input 
+              placeholder="请输入权限名称" 
+              disabled={LOCKED_NAMES.includes(editing?.permission_name || editing?.name || '')}
+            />
           </Form.Item>
           <Form.Item label="父级分类" name="parentId">
             <TreeSelect
