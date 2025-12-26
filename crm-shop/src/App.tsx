@@ -107,22 +107,24 @@ function AppLayout() {
                 <Spin size="large" tip="加载中..." />
               </div>
             )}
-            <Routes>
-              <Route path="/" element={<Navigate to="/home" replace />} />
-              <Route path="/home" element={<Home />} />
-              <Route path="/roles" element={<RoleManagement />} />
-              <Route path="/admins" element={<AdminList />} />
-              <Route path="/permissions" element={<PermissionSettings />} />
-              <Route path="/product-category" element={<ProductCategory />} />
-              <Route path="/product-list" element={<ProductList />} />
-              <Route path="/article-category" element={<ArticleCategory />} />
-              <Route path="/article-list" element={<ArticleList />} />
-              <Route path="/order-list" element={<OrderList />} />
-              <Route path="/order-statistics" element={<OrderStatistics />} />
-              <Route path="/base-settings" element={<BaseSettings />} />
-              <Route path="/agreement-settings" element={<AgreementSettings />} />
-              <Route path="*" element={<Navigate to="/home" replace />} />
-            </Routes>
+            <div style={{ visibility: isLoading ? 'hidden' : 'visible' }}>
+              <Routes>
+                <Route path="/" element={<Navigate to="/home" replace />} />
+                <Route path="/home" element={<Home />} />
+                <Route path="/roles" element={<RoleManagement />} />
+                <Route path="/admins" element={<AdminList />} />
+                <Route path="/permissions" element={<PermissionSettings />} />
+                <Route path="/product-category" element={<ProductCategory />} />
+                <Route path="/product-list" element={<ProductList />} />
+                <Route path="/article-category" element={<ArticleCategory />} />
+                <Route path="/article-list" element={<ArticleList />} />
+                <Route path="/order-list" element={<OrderList />} />
+                <Route path="/order-statistics" element={<OrderStatistics />} />
+                <Route path="/base-settings" element={<BaseSettings />} />
+                <Route path="/agreement-settings" element={<AgreementSettings />} />
+                <Route path="*" element={<Navigate to="/home" replace />} />
+              </Routes>
+            </div>
           </Content>
         </Layout>
       </Layout>
