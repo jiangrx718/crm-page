@@ -25,6 +25,9 @@ axios.interceptors.request.use(
 // 响应拦截器
 axios.interceptors.response.use(
   (response) => {
+    // 任何接口响应都尝试结束全局 loading
+    eventBus.emit('stop_loading');
+
     const res = response.data;
     const url = response.config.url || '';
     const status = (response as any)?.status;
@@ -55,6 +58,9 @@ axios.interceptors.response.use(
     return response;
   },
   (error) => {
+    // 接口错误也尝试结束全局 loading
+    eventBus.emit('stop_loading');
+
     console.error('Global Error Interceptor (Network):', error);
     if (error.response) {
       // 优先显示接口返回的 msg

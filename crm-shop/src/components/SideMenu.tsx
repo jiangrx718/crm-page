@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ExperimentOutlined, DownOutlined, RightOutlined, SafetyOutlined, ShoppingOutlined, SettingOutlined, HomeOutlined, ShoppingCartOutlined, ReadOutlined, AppstoreOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
+import { eventBus } from '../utils/eventBus';
 
 interface Permission {
   permission_id: string;
@@ -79,6 +80,9 @@ const SideMenu: React.FC = () => {
   const handleParentClick = (item: Permission) => {
     // If it has no children, navigate
     if (!item.child_list || item.child_list.length === 0) {
+      if (item.permission_url && item.permission_url !== currentPath) {
+        eventBus.emit('start_loading');
+      }
       navigate(item.permission_url);
       setOpenKeys([]);
       return;
@@ -96,6 +100,9 @@ const SideMenu: React.FC = () => {
     // Usually container nodes have url="/" or similar which is not a page.
     // The example data has permission_url="/" for containers.
     if (item.permission_url && item.permission_url !== '/') {
+        if (item.permission_url !== currentPath) {
+          eventBus.emit('start_loading');
+        }
         navigate(item.permission_url);
     }
   };
@@ -128,7 +135,12 @@ const SideMenu: React.FC = () => {
                   <div
                     key={subItem.permission_id}
                     className={`submenu-item ${currentPath === subItem.permission_url ? 'active' : ''}`}
-                    onClick={() => navigate(subItem.permission_url)}
+                    onClick={() => {
+                      if (subItem.permission_url && subItem.permission_url !== currentPath) {
+                        eventBus.emit('start_loading');
+                      }
+                      navigate(subItem.permission_url);
+                    }}
                   >
                     <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>{subItem.permission_name}</span>
                   </div>

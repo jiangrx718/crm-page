@@ -1,6 +1,6 @@
-import { Layout, App as AntdApp } from 'antd';
+import { Layout, App as AntdApp, Spin } from 'antd';
 import { HashRouter as Router, Route, Routes, Navigate } from 'react-router-dom'; // 修改这里：BrowserRouter → HashRouter
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { eventBus } from './utils/eventBus';
 import SideMenu from './components/SideMenu';
 import UserMenu from './components/UserMenu';
@@ -53,6 +53,34 @@ const GlobalErrorListener = () => {
 };
 
 function AppLayout() {
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    let timer: any;
+    const handleStartLoading = () => {
+      setIsLoading(true);
+      // Safety timeout: auto-hide after 1.5s if no request finishes (e.g. static page)
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 1500);
+    };
+
+    const handleStopLoading = () => {
+      if (timer) clearTimeout(timer);
+      // Add a small delay to prevent flickering for very fast requests
+      setTimeout(() => setIsLoading(false), 200);
+    };
+
+    eventBus.on('start_loading', handleStartLoading);
+    eventBus.on('stop_loading', handleStopLoading);
+    return () => {
+      eventBus.off('start_loading', handleStartLoading);
+      eventBus.off('stop_loading', handleStopLoading);
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
+
   return (
     <Layout className="app-container">
       <Header className="app-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: 24 }}>
@@ -64,7 +92,21 @@ function AppLayout() {
           <SideMenu />
         </Sider>
         <Layout>
-          <Content className="app-content">
+          <Content className="app-content" style={{ position: 'relative', minHeight: '100%' }}>
+            {isLoading && (
+              <div style={{
+                position: 'absolute',
+                top: 0, left: 0, right: 0, bottom: 0,
+                background: 'rgba(255, 255, 255, 0.6)',
+                zIndex: 1000,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                backdropFilter: 'blur(2px)'
+              }}>
+                <Spin size="large" tip="加载中..." />
+              </div>
+            )}
             <Routes>
               <Route path="/" element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<Home />} />
