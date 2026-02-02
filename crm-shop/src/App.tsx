@@ -16,6 +16,7 @@ import OrderList from './pages/OrderList';
 import OrderStatistics from './pages/OrderStatistics';
 import ArticleCategory from './pages/ArticleCategory';
 import ArticleList from './pages/ArticleList';
+import PictureBookList from './pages/PictureBookList';
 import Login from './pages/Login';
 import { AuthProvider } from './contexts/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
@@ -118,6 +119,7 @@ function AppLayout() {
                 <Route path="/product-list" element={<ProductList />} />
                 <Route path="/article-category" element={<ArticleCategory />} />
                 <Route path="/article-list" element={<ArticleList />} />
+                <Route path="/picture-book-list" element={<PictureBookList />} />
                 <Route path="/order-list" element={<OrderList />} />
                 <Route path="/order-statistics" element={<OrderStatistics />} />
                 <Route path="/base-settings" element={<BaseSettings />} />
