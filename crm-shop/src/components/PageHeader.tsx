@@ -1,21 +1,30 @@
-import { Breadcrumb } from 'antd';
+import { Breadcrumb, Button, Tooltip } from 'antd';
 import { Link } from 'react-router-dom';
+import { ReloadOutlined } from '@ant-design/icons';
 
 interface PageHeaderProps {
-  title: string;
   breadcrumbs: Array<{ path?: string; name: string }>;
+  onRefresh?: () => void;
 }
 
-const PageHeader: React.FC<PageHeaderProps> = ({ title, breadcrumbs }) => {
+const PageHeader: React.FC<PageHeaderProps> = ({ breadcrumbs, onRefresh }) => {
   return (
-    <div className="page-header">
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
       <Breadcrumb
-        className="breadcrumb"
         items={breadcrumbs.map((item) => ({
           title: item.path ? <Link to={item.path}>{item.name}</Link> : item.name,
         }))}
       />
-      <h1 className="page-title">{title}</h1>
+      {onRefresh && (
+        <Tooltip title="刷新数据">
+          <Button
+            type="text"
+            icon={<ReloadOutlined />}
+            onClick={onRefresh}
+            style={{ color: '#1677ff' }}
+          />
+        </Tooltip>
+      )}
     </div>
   );
 };

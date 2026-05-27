@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Modal, Radio, message, Tag, Popconfirm } from 'antd';
+import { Card, Form, Select, Input, Button, Table, Empty, Modal, Radio, message, Tag, Popconfirm } from 'antd';
 import { showError } from '../utils/notify';
-import { Link } from 'react-router-dom';
+import PageHeader from '../components/PageHeader';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 
@@ -146,13 +146,9 @@ const AdminList: React.FC = () => {
   return (
     <div>
       <Card>
-        <Breadcrumb
-          style={{ marginBottom: 20 }}
-          items={[
-            { title: <Link to="/home">首页</Link> },
-            { title: '管理权限' },
-            { title: '管理员列表' },
-          ]}
+        <PageHeader
+          breadcrumbs={[{ path: '/home', name: '首页' }, { name: '管理权限' }, { name: '管理员列表' }]}
+          onRefresh={() => fetchAdminList(page, pageSize)}
         />
         <Form layout="inline" style={{ background: '#f7f8fa', padding: 16, borderRadius: 8 }}>
           <Form.Item label="状态">

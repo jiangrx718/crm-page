@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Button, Table, Empty, Breadcrumb, Modal, Radio, Tree, Spin, message, Tag, Popconfirm } from 'antd';
+import { Card, Form, Input, Button, Table, Empty, Modal, Radio, Tree, Spin, message, Tag, Popconfirm } from 'antd';
 import { showError } from '../utils/notify';
-import { Link } from 'react-router-dom';
+import PageHeader from '../components/PageHeader';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 
@@ -202,13 +202,9 @@ const RoleManagement: React.FC = () => {
     <div>
       <Card>
         {/* 面包屑导航 */}
-        <Breadcrumb
-          style={{ marginBottom: 20 }}
-          items={[
-            { title: <Link to="/home">首页</Link> },
-            { title: '管理权限' },
-            { title: '角色管理' },
-          ]}
+        <PageHeader
+          breadcrumbs={[{ path: '/home', name: '首页' }, { name: '管理权限' }, { name: '角色管理' }]}
+          onRefresh={() => fetchRoleList(page, pageSize)}
         />
 
         <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-start' }}>

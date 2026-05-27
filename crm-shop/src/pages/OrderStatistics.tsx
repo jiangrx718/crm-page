@@ -1,6 +1,6 @@
 import React from 'react';
-import { Breadcrumb, Card, Tabs, Table, Row, Col, Statistic, DatePicker, Progress } from 'antd';
-import { Link } from 'react-router-dom';
+import { Card, Tabs, Table, Row, Col, Statistic, DatePicker, Progress } from 'antd';
+import PageHeader from '../components/PageHeader';
 import ReactECharts from 'echarts-for-react';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
@@ -79,7 +79,10 @@ const OrderStatistics: React.FC = () => {
   return (
     <div>
       <Card>
-        <Breadcrumb style={{ marginBottom: 16 }} items={[{ title: <Link to="/home">首页</Link> }, { title: '订单管理' }, { title: '订单统计' }]} />
+        <PageHeader
+          breadcrumbs={[{ path: '/home', name: '首页' }, { name: '订单管理' }, { name: '订单统计' }]}
+          onRefresh={() => {}}
+        />
 
         <Row gutter={16} align="middle" style={{ marginBottom: 12 }}>
           <Col flex="none">

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Card, Form, Select, Input, Button, Table, Empty, Image, Tag, Breadcrumb } from 'antd';
-import { Link } from 'react-router-dom';
+import { Card, Form, Select, Input, Button, Table, Empty, Image, Tag } from 'antd';
+import PageHeader from '../components/PageHeader';
 
 const ProductList: React.FC = () => {
   const [categoryId, setCategoryId] = useState<string | undefined>();
@@ -21,13 +21,8 @@ const ProductList: React.FC = () => {
     <div>
       <Card>
         {/* 面包屑导航 */}
-        <Breadcrumb
-          style={{ marginBottom: 20 }}
-          items={[
-            { title: <Link to="/home">首页</Link> },
-            { title: '商品管理' },
-            { title: '商品列表' },
-          ]}
+        <PageHeader
+          breadcrumbs={[{ path: '/home', name: '首页' }, { name: '商品管理' }, { name: '商品列表' }]}
         />
         <Form layout="inline" style={{ background: '#f7f8fa', padding: 16, borderRadius: 8 }}>
           <Form.Item label="商品分类">

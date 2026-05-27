@@ -1,7 +1,7 @@
 import React from 'react';
-import { Breadcrumb, Card, Form, Input, Select, Button, Tabs, Table, Tag, Empty, Dropdown, Modal, message, Drawer, Descriptions, Divider } from 'antd';
+import { Card, Form, Input, Select, Button, Tabs, Table, Tag, Empty, Dropdown, Modal, message, Drawer, Descriptions, Divider } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { Link } from 'react-router-dom';
+import PageHeader from '../components/PageHeader';
 
 type OrderItem = {
   id: string;
@@ -119,8 +119,10 @@ const OrderList: React.FC = () => {
   return (
     <div>
       <Card>
-        {/* 面包屑导航 */}
-        <Breadcrumb style={{ marginBottom: 20 }} items={[{ title: <Link to="/home">首页</Link> }, { title: '订单管理' }, { title: '订单列表' }]} />
+        <PageHeader
+          breadcrumbs={[{ path: '/home', name: '首页' }, { name: '订单管理' }, { name: '订单列表' }]}
+          onRefresh={() => setData([...allMock])}
+        />
 
         {/* 顶部筛选栏：与上传图的布局风格一致 */}
         <Form form={form} layout="inline" style={{ background: '#f7f8fa', padding: 16, borderRadius: 8 }}>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Switch, Modal, InputNumber, Upload, Radio, Popconfirm, message, Tooltip } from 'antd';
+import { Card, Form, Select, Input, Button, Table, Empty, Switch, Modal, InputNumber, Upload, Radio, Popconfirm, message, Tooltip } from 'antd';
 import { showError } from '../utils/notify';
-import { Link } from 'react-router-dom';
+import PageHeader from '../components/PageHeader';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 
@@ -250,13 +250,9 @@ const ProductCategory: React.FC = () => {
     <div>
       <Card>
         {/* 面包屑导航 */}
-        <Breadcrumb
-          style={{ marginBottom: 20 }}
-          items={[
-            { title: <Link to="/home">首页</Link> },
-            { title: '商品管理' },
-            { title: '商品分类' },
-          ]}
+        <PageHeader
+          breadcrumbs={[{ path: '/home', name: '首页' }, { name: '商品管理' }, { name: '商品分类' }]}
+          onRefresh={fetchCategories}
         />
 
         <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-start' }}>

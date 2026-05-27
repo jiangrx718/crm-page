@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, Form, Input, Button, Table, Empty, Breadcrumb, Popconfirm, message, Switch, Upload, Modal, Select, InputNumber } from 'antd';
+import { Card, Form, Input, Button, Table, Empty, Popconfirm, message, Switch, Upload, Modal, Select, InputNumber } from 'antd';
 import { showError } from '../utils/notify';
 import { PlusOutlined } from '@ant-design/icons';
+import PageHeader from '../components/PageHeader';
 
 import RichEditor from '../components/RichEditor';
 import axios from 'axios';
@@ -272,8 +273,11 @@ const PictureBookList: React.FC = () => {
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[{ title: '内容管理' }, { title: '绘本管理' }]} style={{ marginBottom: 16 }} />
-      
+      <PageHeader
+        breadcrumbs={[{ name: '内容管理' }, { name: '绘本管理' }]}
+        onRefresh={() => { fetchCategoryList(); fetchList(page, pageSize); }}
+      />
+
       <Card>
         <div className="filter-container" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', gap: 16 }}>

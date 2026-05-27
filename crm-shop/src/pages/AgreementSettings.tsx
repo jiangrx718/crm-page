@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Breadcrumb, Card, Tabs, Button } from 'antd';
-import { Link } from 'react-router-dom';
+import { Card, Tabs, Button } from 'antd';
+import PageHeader from '../components/PageHeader';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
 
@@ -91,7 +91,9 @@ const AgreementSettings: React.FC = () => {
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[{ title: <Link to="/home">首页</Link> }, { title: '系统设置' }, { title: '协议设置' }]} />
+      <PageHeader
+        breadcrumbs={[{ path: '/home', name: '首页' }, { name: '系统设置' }, { name: '协议设置' }]}
+      />
 
       <Card style={{ marginTop: 16 }}>
         <Tabs

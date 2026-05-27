@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Card, Form, Select, Input, Button, Table, Empty, Breadcrumb, Popconfirm, message, Switch, Divider, Upload, Tooltip, Radio, DatePicker } from 'antd';
+import { Card, Form, Select, Input, Button, Table, Empty, Popconfirm, message, Switch, Divider, Upload, Tooltip, Radio, DatePicker } from 'antd';
 import { showError } from '../utils/notify';
 import { PlusOutlined } from '@ant-design/icons';
-import { Link } from 'react-router-dom';
+import PageHeader from '../components/PageHeader';
 import RichEditor from '../components/RichEditor';
 import axios from 'axios';
 import dayjs from 'dayjs';
@@ -271,13 +271,9 @@ const ArticleList: React.FC = () => {
   return (
     <div>
       <Card>
-        <Breadcrumb
-          style={{ marginBottom: 20 }}
-          items={[
-            { title: <Link to="/home">首页</Link> },
-            { title: '内容管理' },
-            { title: '文章列表' },
-          ]}
+        <PageHeader
+          breadcrumbs={[{ path: '/home', name: '首页' }, { name: '内容管理' }, { name: '文章列表' }]}
+          onRefresh={() => { fetchCategoryMap(); fetchArticleList(page, pageSize); }}
         />
 
         {/* 列表视图 / 添加视图 切换渲染在红框区域 */}

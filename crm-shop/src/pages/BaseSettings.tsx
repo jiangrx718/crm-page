@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Breadcrumb, Card, Form, Input, Button, Space, Tabs, Radio } from 'antd';
-import { Link } from 'react-router-dom';
+import { Card, Form, Input, Button, Space, Tabs, Radio } from 'antd';
+import PageHeader from '../components/PageHeader';
 
 const BaseSettings: React.FC = () => {
   const [form] = Form.useForm();
@@ -26,7 +26,9 @@ const BaseSettings: React.FC = () => {
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[{ title: <Link to="/home">首页</Link> }, { title: '系统设置' }, { title: '基础设置' }]} />
+      <PageHeader
+        breadcrumbs={[{ path: '/home', name: '首页' }, { name: '系统设置' }, { name: '基础设置' }]}
+      />
 
       <Card style={{ marginTop: 16 }}>
         {/* 顶部标签布局，视觉与上传图片页面保持一致 */}

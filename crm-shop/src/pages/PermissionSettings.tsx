@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
-import { Card, Form, Input, Button, Table, Empty, Breadcrumb, Modal, InputNumber, Switch, TreeSelect, Tooltip, Popconfirm, Radio, Spin, message, Select, Tag } from 'antd';
+import { Card, Form, Input, Button, Table, Empty, Modal, InputNumber, Switch, TreeSelect, Tooltip, Popconfirm, Radio, Spin, message, Select, Tag } from 'antd';
 import { showError } from '../utils/notify';
-
-import { Link } from 'react-router-dom';
+import PageHeader from '../components/PageHeader';
 
 type Permission = {
   id: number;
@@ -280,13 +279,9 @@ const PermissionSettings: React.FC = () => {
   return (
     <div>
       <Card>
-        <Breadcrumb
-          style={{ marginBottom: 20 }}
-          items={[
-            { title: <Link to="/home">首页</Link> },
-            { title: '管理权限' },
-            { title: '权限设置' },
-          ]}
+        <PageHeader
+          breadcrumbs={[{ path: '/home', name: '首页' }, { name: '管理权限' }, { name: '权限设置' }]}
+          onRefresh={fetchPermissions}
         />
 
         <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-start' }}>
