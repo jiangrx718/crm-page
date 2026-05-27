@@ -36,25 +36,7 @@ const UserMenu: React.FC = () => {
 
   return (
     <Dropdown menu={{ items }} placement="bottomRight" trigger={['click']}>
-      <div 
-        style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 8,
-          paddingLeft: 16,
-          paddingRight: 16,
-          height: '100%',
-          backgroundColor: '#1677ff',
-          cursor: 'pointer',
-          transition: 'all 0.3s'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = '#0958d9';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = '#1677ff';
-        }}
-      >
+      <div className="user-menu-trigger">
         <UserOutlined style={{ color: '#fff', fontSize: 14 }} />
         <span style={{ color: '#fff', fontSize: 14, fontWeight: 500 }}>{displayUsername(username)}</span>
       </div>

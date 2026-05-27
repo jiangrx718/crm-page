@@ -1,25 +1,27 @@
 import { Layout, App as AntdApp, Spin } from 'antd';
-import { HashRouter as Router, Route, Routes, Navigate } from 'react-router-dom'; // 修改这里：BrowserRouter → HashRouter
-import { useEffect, useState } from 'react';
+import { HashRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { eventBus } from './utils/eventBus';
 import SideMenu from './components/SideMenu';
 import UserMenu from './components/UserMenu';
-import RoleManagement from './pages/RoleManagement';
-import AdminList from './pages/AdminList';
-import PermissionSettings from './pages/PermissionSettings';
-import ProductCategory from './pages/ProductCategory';
-import ProductList from './pages/ProductList';
-import BaseSettings from './pages/BaseSettings';
-import AgreementSettings from './pages/AgreementSettings';
-import Home from './pages/Home';
-import OrderList from './pages/OrderList';
-import OrderStatistics from './pages/OrderStatistics';
-import ArticleCategory from './pages/ArticleCategory';
-import ArticleList from './pages/ArticleList';
-import PictureBookList from './pages/PictureBookList';
-import Login from './pages/Login';
 import { AuthProvider } from './contexts/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
+
+// Lazy load page components for code splitting
+const Login = lazy(() => import('./pages/Login'));
+const Home = lazy(() => import('./pages/Home'));
+const RoleManagement = lazy(() => import('./pages/RoleManagement'));
+const AdminList = lazy(() => import('./pages/AdminList'));
+const PermissionSettings = lazy(() => import('./pages/PermissionSettings'));
+const ProductCategory = lazy(() => import('./pages/ProductCategory'));
+const ProductList = lazy(() => import('./pages/ProductList'));
+const BaseSettings = lazy(() => import('./pages/BaseSettings'));
+const AgreementSettings = lazy(() => import('./pages/AgreementSettings'));
+const OrderList = lazy(() => import('./pages/OrderList'));
+const OrderStatistics = lazy(() => import('./pages/OrderStatistics'));
+const ArticleCategory = lazy(() => import('./pages/ArticleCategory'));
+const ArticleList = lazy(() => import('./pages/ArticleList'));
+const PictureBookList = lazy(() => import('./pages/PictureBookList'));
 
 const { Header, Content, Sider } = Layout;
 
@@ -53,24 +55,42 @@ const GlobalErrorListener = () => {
   return null;
 };
 
+// Page loading fallback
+const PageLoading = () => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 'calc(100vh - 200px)',
+  }}>
+    <Spin size="large" tip="加载中..." />
+  </div>
+);
+
 function AppLayout() {
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingVisible, setLoadingVisible] = useState(false);
 
   useEffect(() => {
     let timer: any;
+    let fadeTimer: any;
+
     const handleStartLoading = () => {
       setIsLoading(true);
-      // Safety timeout: auto-hide after 1.5s if no request finishes (e.g. static page)
+      setLoadingVisible(true);
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
         setIsLoading(false);
+        fadeTimer = setTimeout(() => setLoadingVisible(false), 300);
       }, 1500);
     };
 
     const handleStopLoading = () => {
       if (timer) clearTimeout(timer);
-      // Add a small delay to prevent flickering for very fast requests
-      setTimeout(() => setIsLoading(false), 200);
+      setTimeout(() => {
+        setIsLoading(false);
+        fadeTimer = setTimeout(() => setLoadingVisible(false), 300);
+      }, 100);
     };
 
     eventBus.on('start_loading', handleStartLoading);
@@ -79,12 +99,13 @@ function AppLayout() {
       eventBus.off('start_loading', handleStartLoading);
       eventBus.off('stop_loading', handleStopLoading);
       if (timer) clearTimeout(timer);
+      if (fadeTimer) clearTimeout(fadeTimer);
     };
   }, []);
 
   return (
     <Layout className="app-container">
-      <Header className="app-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: 24 }}>
+      <Header className="app-header">
         <div className="app-logo">CRM商品管理后台系统</div>
         <UserMenu />
       </Header>
@@ -94,38 +115,31 @@ function AppLayout() {
         </Sider>
         <Layout>
           <Content className="app-content" style={{ position: 'relative', minHeight: '100%' }}>
-            {isLoading && (
-              <div style={{
-                position: 'absolute',
-                top: 0, left: 0, right: 0, bottom: 0,
-                background: 'rgba(255, 255, 255, 0.6)',
-                zIndex: 1000,
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                backdropFilter: 'blur(2px)'
-              }}>
+            {loadingVisible && (
+              <div className={`loading-overlay ${isLoading ? 'loading-overlay-enter' : 'loading-overlay-exit'}`}>
                 <Spin size="large" tip="加载中..." />
               </div>
             )}
-            <div style={{ visibility: isLoading ? 'hidden' : 'visible' }}>
-              <Routes>
-                <Route path="/" element={<Navigate to="/home" replace />} />
-                <Route path="/home" element={<Home />} />
-                <Route path="/roles" element={<RoleManagement />} />
-                <Route path="/admins" element={<AdminList />} />
-                <Route path="/permissions" element={<PermissionSettings />} />
-                <Route path="/product-category" element={<ProductCategory />} />
-                <Route path="/product-list" element={<ProductList />} />
-                <Route path="/article-category" element={<ArticleCategory />} />
-                <Route path="/article-list" element={<ArticleList />} />
-                <Route path="/picture-book-list" element={<PictureBookList />} />
-                <Route path="/order-list" element={<OrderList />} />
-                <Route path="/order-statistics" element={<OrderStatistics />} />
-                <Route path="/base-settings" element={<BaseSettings />} />
-                <Route path="/agreement-settings" element={<AgreementSettings />} />
-                <Route path="*" element={<Navigate to="/home" replace />} />
-              </Routes>
+            <div className="page-content-wrapper" style={{ opacity: isLoading ? 0.3 : 1, transition: 'opacity 0.3s ease' }}>
+              <Suspense fallback={<PageLoading />}>
+                <Routes>
+                  <Route path="/" element={<Navigate to="/home" replace />} />
+                  <Route path="/home" element={<Home />} />
+                  <Route path="/roles" element={<RoleManagement />} />
+                  <Route path="/admins" element={<AdminList />} />
+                  <Route path="/permissions" element={<PermissionSettings />} />
+                  <Route path="/product-category" element={<ProductCategory />} />
+                  <Route path="/product-list" element={<ProductList />} />
+                  <Route path="/article-category" element={<ArticleCategory />} />
+                  <Route path="/article-list" element={<ArticleList />} />
+                  <Route path="/picture-book-list" element={<PictureBookList />} />
+                  <Route path="/order-list" element={<OrderList />} />
+                  <Route path="/order-statistics" element={<OrderStatistics />} />
+                  <Route path="/base-settings" element={<BaseSettings />} />
+                  <Route path="/agreement-settings" element={<AgreementSettings />} />
+                  <Route path="*" element={<Navigate to="/home" replace />} />
+                </Routes>
+              </Suspense>
             </div>
           </Content>
         </Layout>
@@ -140,12 +154,12 @@ function App() {
       <GlobalErrorListener />
       <AuthProvider>
         <Router>
-          <Routes>
-            {/* 独立登录页：不需要登录态授权，也不嵌入主布局 */}
-            <Route path="/login" element={<Login />} />
-            {/* 其他业务页面统一走主布局（整体受 PrivateRoute 保护，避免闪现） */}
-            <Route path="/*" element={<PrivateRoute><AppLayout /></PrivateRoute>} />
-          </Routes>
+          <Suspense fallback={<PageLoading />}>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/*" element={<PrivateRoute><AppLayout /></PrivateRoute>} />
+            </Routes>
+          </Suspense>
         </Router>
       </AuthProvider>
     </AntdApp>

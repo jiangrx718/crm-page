@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ExperimentOutlined, DownOutlined, RightOutlined, SafetyOutlined, ShoppingOutlined, SettingOutlined, HomeOutlined, ShoppingCartOutlined, ReadOutlined, AppstoreOutlined } from '@ant-design/icons';
+import { ExperimentOutlined, DownOutlined, SafetyOutlined, ShoppingOutlined, SettingOutlined, HomeOutlined, ShoppingCartOutlined, ReadOutlined, AppstoreOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 import { eventBus } from '../utils/eventBus';
@@ -108,7 +108,7 @@ const SideMenu: React.FC = () => {
   };
 
   return (
-    <div className="menu-container" style={{ height: '100vh', overflowY: 'auto', overscrollBehavior: 'contain', paddingBottom: 12 }}>
+    <div className="menu-container" style={{ height: '100%', overflowY: 'auto', overscrollBehavior: 'contain', paddingBottom: 12 }}>
       {menuData.map(item => {
         const hasChildren = item.child_list && item.child_list.length > 0;
         const isOpen = openKeys.includes(item.permission_id);
@@ -123,30 +123,37 @@ const SideMenu: React.FC = () => {
               <span className="menu-icon">{getIcon(item.permission_name)}</span>
               <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>{item.permission_name}</span>
               {hasChildren && (
-                <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
-                  {isOpen ? <DownOutlined /> : <RightOutlined />}
+                <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', transition: 'transform 0.2s ease', transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
+                  <DownOutlined />
                 </span>
               )}
             </div>
 
-            {hasChildren && isOpen && (
-              <div className="submenu-container">
-                {item.child_list.map(subItem => (
-                  <div
-                    key={subItem.permission_id}
-                    className={`submenu-item ${currentPath === subItem.permission_url ? 'active' : ''}`}
-                    onClick={() => {
-                      if (subItem.permission_url && subItem.permission_url !== currentPath) {
-                        eventBus.emit('start_loading');
-                      }
-                      navigate(subItem.permission_url);
-                    }}
-                  >
-                    <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>{subItem.permission_name}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div style={{
+              overflow: 'hidden',
+              transition: 'max-height 0.25s ease, opacity 0.2s ease',
+              maxHeight: hasChildren && isOpen ? 500 : 0,
+              opacity: hasChildren && isOpen ? 1 : 0,
+            }}>
+              {hasChildren && (
+                <div className="submenu-container">
+                  {item.child_list.map(subItem => (
+                    <div
+                      key={subItem.permission_id}
+                      className={`submenu-item ${currentPath === subItem.permission_url ? 'active' : ''}`}
+                      onClick={() => {
+                        if (subItem.permission_url && subItem.permission_url !== currentPath) {
+                          eventBus.emit('start_loading');
+                        }
+                        navigate(subItem.permission_url);
+                      }}
+                    >
+                      <span className="menu-text" style={{ whiteSpace: 'nowrap' }}>{subItem.permission_name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         );
       })}
