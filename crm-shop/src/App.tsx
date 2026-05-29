@@ -22,6 +22,10 @@ const OrderStatistics = lazy(() => import('./pages/OrderStatistics'));
 const ArticleCategory = lazy(() => import('./pages/ArticleCategory'));
 const ArticleList = lazy(() => import('./pages/ArticleList'));
 const PictureBookList = lazy(() => import('./pages/PictureBookList'));
+const MathematicsList = lazy(() => import('./pages/MathematicsList'));
+const MathChapterList = lazy(() => import('./pages/MathChapterList'));
+const MathKnowledgeList = lazy(() => import('./pages/MathKnowledgeList'));
+const MathExerciseList = lazy(() => import('./pages/MathExerciseList'));
 
 const { Header, Content, Sider } = Layout;
 
@@ -133,6 +137,10 @@ function AppLayout() {
                   <Route path="/article-category" element={<ArticleCategory />} />
                   <Route path="/article-list" element={<ArticleList />} />
                   <Route path="/picture-book-list" element={<PictureBookList />} />
+                  <Route path="/mathematics" element={<MathematicsList />} />
+                  <Route path="/mathematics/chapters/:gradeId" element={<MathChapterList />} />
+                  <Route path="/mathematics/knowledge/:chapterId" element={<MathKnowledgeList />} />
+                  <Route path="/mathematics/exercises/:pointId" element={<MathExerciseList />} />
                   <Route path="/order-list" element={<OrderList />} />
                   <Route path="/order-statistics" element={<OrderStatistics />} />
                   <Route path="/base-settings" element={<BaseSettings />} />
