@@ -95,9 +95,13 @@ const MathKnowledgeList: React.FC = () => {
     } catch { /* ignore */ }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (record: KnowledgePoint) => {
+    if (record.exerciseCount > 0) {
+      message.warning('该知识点下存在练习题，无法删除');
+      return;
+    }
     try {
-      const res = await axios.post(`${API_BASE_URL}/api/mathematics/knowledge/delete`, { knowledge_id: id });
+      const res = await axios.post(`${API_BASE_URL}/api/mathematics/knowledge/delete`, { knowledge_id: record.id });
       if (res.data?.code === 0) {
         message.success('删除成功');
         fetchList(page, pageSize);
@@ -178,7 +182,7 @@ const MathKnowledgeList: React.FC = () => {
             state: { gradeName, chapterName, pointTitle: record.title }
           })}>管理练习题</Button>
           <Button type="link" onClick={() => handleEdit(record)}>编辑</Button>
-          <Popconfirm title="确定删除吗？" okText="确定" cancelText="取消" onConfirm={() => handleDelete(record.id)}>
+          <Popconfirm title="确定删除吗？" okText="确定" cancelText="取消" onConfirm={() => handleDelete(record)}>
             <Button type="link" danger>删除</Button>
           </Popconfirm>
         </div>

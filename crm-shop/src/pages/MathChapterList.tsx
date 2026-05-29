@@ -88,9 +88,13 @@ const MathChapterList: React.FC = () => {
     } catch { /* ignore */ }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (record: Chapter) => {
+    if (record.pointCount > 0) {
+      message.warning('该章节下存在知识点，无法删除');
+      return;
+    }
     try {
-      const res = await axios.post(`${API_BASE_URL}/api/mathematics/chapter/delete`, { chapter_id: id });
+      const res = await axios.post(`${API_BASE_URL}/api/mathematics/chapter/delete`, { chapter_id: record.id });
       if (res.data?.code === 0) {
         message.success('删除成功');
         fetchList(page, pageSize);
@@ -159,7 +163,7 @@ const MathChapterList: React.FC = () => {
             state: { gradeName, chapterName: record.name }
           })}>管理知识点</Button>
           <Button type="link" onClick={() => handleEdit(record)}>编辑</Button>
-          <Popconfirm title="确定删除吗？" okText="确定" cancelText="取消" onConfirm={() => handleDelete(record.id)}>
+          <Popconfirm title="确定删除吗？" okText="确定" cancelText="取消" onConfirm={() => handleDelete(record)}>
             <Button type="link" danger>删除</Button>
           </Popconfirm>
         </div>
