@@ -28,6 +28,13 @@ axios.interceptors.response.use(
     // 任何接口响应都尝试结束全局 loading
     eventBus.emit('stop_loading');
 
+    // Token 自动续期：后端返回 X-New-Token 头时更新本地 token
+    const newToken = response.headers['x-new-token'];
+    if (newToken) {
+      localStorage.setItem('authToken', newToken);
+      axios.defaults.headers.common['Authorization'] = newToken;
+    }
+
     const res = response.data;
     const url = response.config.url || '';
     const status = (response as any)?.status;
